@@ -1,0 +1,160 @@
+{
+  "sentences": {
+    "1": "assets/audio/sentences/s01.mp3",
+    "2": "assets/audio/sentences/s02.mp3",
+    "3": "assets/audio/sentences/s03.mp3",
+    "4": "assets/audio/sentences/s04.mp3",
+    "5": "assets/audio/sentences/s05.mp3",
+    "6": "assets/audio/sentences/s06.mp3",
+    "7": "assets/audio/sentences/s07.mp3",
+    "8": "assets/audio/sentences/s08.mp3",
+    "9": "assets/audio/sentences/s09.mp3",
+    "10": "assets/audio/sentences/s10.mp3",
+    "11": "assets/audio/sentences/s11.mp3",
+    "12": "assets/audio/sentences/s12.mp3",
+    "13": "assets/audio/sentences/s13.mp3",
+    "14": "assets/audio/sentences/s14.mp3",
+    "15": "assets/audio/sentences/s15.mp3",
+    "16": "assets/audio/sentences/s16.mp3",
+    "17": "assets/audio/sentences/s17.mp3",
+    "18": "assets/audio/sentences/s18.mp3",
+    "19": "assets/audio/sentences/s19.mp3",
+    "20": "assets/audio/sentences/s20.mp3"
+  },
+  "words": {
+    "1": {
+      "i": "assets/audio/words/s01/i.mp3",
+      "like": "assets/audio/words/s01/like.mp3",
+      "cats": "assets/audio/words/s01/cats.mp3"
+    },
+    "2": {
+      "this": "assets/audio/words/s02/this.mp3",
+      "is": "assets/audio/words/s02/is.mp3",
+      "my": "assets/audio/words/s02/my.mp3",
+      "dog": "assets/audio/words/s02/dog.mp3"
+    },
+    "3": {
+      "the": "assets/audio/words/s03/the.mp3",
+      "sun": "assets/audio/words/s03/sun.mp3",
+      "is": "assets/audio/words/s03/is.mp3",
+      "big": "assets/audio/words/s03/big.mp3"
+    },
+    "4": {
+      "she": "assets/audio/words/s04/she.mp3",
+      "can": "assets/audio/words/s04/can.mp3",
+      "run": "assets/audio/words/s04/run.mp3"
+    },
+    "5": {
+      "we": "assets/audio/words/s05/we.mp3",
+      "go": "assets/audio/words/s05/go.mp3",
+      "to": "assets/audio/words/s05/to.mp3",
+      "school": "assets/audio/words/s05/school.mp3"
+    },
+    "6": {
+      "he": "assets/audio/words/s06/he.mp3",
+      "has": "assets/audio/words/s06/has.mp3",
+      "a": "assets/audio/words/s06/a.mp3",
+      "ball": "assets/audio/words/s06/ball.mp3"
+    },
+    "7": {
+      "look": "assets/audio/words/s07/look.mp3",
+      "at": "assets/audio/words/s07/at.mp3",
+      "the": "assets/audio/words/s07/the.mp3",
+      "stars": "assets/audio/words/s07/stars.mp3"
+    },
+    "8": {
+      "you": "assets/audio/words/s08/you.mp3",
+      "are": "assets/audio/words/s08/are.mp3",
+      "my": "assets/audio/words/s08/my.mp3",
+      "friend": "assets/audio/words/s08/friend.mp3"
+    },
+    "9": {
+      "it": "assets/audio/words/s09/it.mp3",
+      "is": "assets/audio/words/s09/is.mp3",
+      "a": "assets/audio/words/s09/a.mp3",
+      "red": "assets/audio/words/s09/red.mp3",
+      "car": "assets/audio/words/s09/car.mp3"
+    },
+    "10": {
+      "they": "assets/audio/words/s10/they.mp3",
+      "like": "assets/audio/words/s10/like.mp3",
+      "to": "assets/audio/words/s10/to.mp3",
+      "play": "assets/audio/words/s10/play.mp3"
+    },
+    "11": {
+      "we": "assets/audio/words/s11/we.mp3",
+      "can": "assets/audio/words/s11/can.mp3",
+      "see": "assets/audio/words/s11/see.mp3",
+      "the": "assets/audio/words/s11/the.mp3",
+      "moon": "assets/audio/words/s11/moon.mp3"
+    },
+    "12": {
+      "she": "assets/audio/words/s12/she.mp3",
+      "has": "assets/audio/words/s12/has.mp3",
+      "a": "assets/audio/words/s12/a.mp3",
+      "book": "assets/audio/words/s12/book.mp3"
+    },
+    "13": {
+      "do": "assets/audio/words/s13/do.mp3",
+      "you": "assets/audio/words/s13/you.mp3",
+      "like": "assets/audio/words/s13/like.mp3",
+      "apples": "assets/audio/words/s13/apples.mp3"
+    },
+    "14": {
+      "this": "assets/audio/words/s14/this.mp3",
+      "is": "assets/audio/words/s14/is.mp3",
+      "my": "assets/audio/words/s14/my.mp3",
+      "house": "assets/audio/words/s14/house.mp3"
+    },
+    "15": {
+      "i": "assets/audio/words/s15/i.mp3",
+      "am": "assets/audio/words/s15/am.mp3",
+      "happy": "assets/audio/words/s15/happy.mp3"
+    },
+    "16": {
+      "he": "assets/audio/words/s16/he.mp3",
+      "likes": "assets/audio/words/s16/likes.mp3",
+      "to": "assets/audio/words/s16/to.mp3",
+      "read": "assets/audio/words/s16/read.mp3"
+    },
+    "17": {
+      "look": "assets/audio/words/s17/look.mp3",
+      "at": "assets/audio/words/s17/at.mp3",
+      "the": "assets/audio/words/s17/the.mp3",
+      "big": "assets/audio/words/s17/big.mp3",
+      "tree": "assets/audio/words/s17/tree.mp3"
+    },
+    "18": {
+      "we": "assets/audio/words/s18/we.mp3",
+      "like": "assets/audio/words/s18/like.mp3",
+      "to": "assets/audio/words/s18/to.mp3",
+      "run": "assets/audio/words/s18/run.mp3"
+    },
+    "19": {
+      "she": "assets/audio/words/s19/she.mp3",
+      "is": "assets/audio/words/s19/is.mp3",
+      "my": "assets/audio/words/s19/my.mp3",
+      "mother": "assets/audio/words/s19/mother.mp3"
+    },
+    "20": {
+      "i": "assets/audio/words/s20/i.mp3",
+      "have": "assets/audio/words/s20/have.mp3",
+      "a": "assets/audio/words/s20/a.mp3",
+      "pen": "assets/audio/words/s20/pen.mp3"
+    }
+  },
+  "ui_end1": [
+    "audio/ui/end1_01.mp3",
+    "audio/ui/end1_02.mp3",
+    "audio/ui/end1_03.mp3",
+    "audio/ui/end1_04.mp3",
+    "audio/ui/end1_05.mp3"
+  ],
+  "ui_end2": [
+    "audio/ui/end2_01.mp3",
+    "audio/ui/end2_02.mp3",
+    "audio/ui/end2_03.mp3",
+    "audio/ui/end2_04.mp3",
+    "audio/ui/end2_05.mp3"
+  ]
+}

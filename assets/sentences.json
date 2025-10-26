@@ -1,0 +1,102 @@
+[
+  {
+    "week": 1,
+    "sentence": "Cats sit on the mat.",
+    "words": ["Cats", "sit", "on", "the", "mat"]
+  },
+  {
+    "week": 2,
+    "sentence": "I see you and him.",
+    "words": ["I", "see", "you", "and", "him"]
+  },
+  {
+    "week": 3,
+    "sentence": "She had one big dog.",
+    "words": ["She", "had", "one", "big", "dog"]
+  },
+  {
+    "week": 4,
+    "sentence": "We can go with them.",
+    "words": ["We", "can", "go", "with", "them"]
+  },
+  {
+    "week": 5,
+    "sentence": "He is in the house.",
+    "words": ["He", "is", "in", "the", "house"]
+  },
+  {
+    "week": 6,
+    "sentence": "They are at the park.",
+    "words": ["They", "are", "at", "the", "park"]
+  },
+  {
+    "week": 7,
+    "sentence": "This was for your book.",
+    "words": ["This", "was", "for", "your", "book"]
+  },
+  {
+    "week": 8,
+    "sentence": "From where did you come?",
+    "words": ["From", "where", "did", "you", "come"]
+  },
+  {
+    "week": 9,
+    "sentence": "What will she do now?",
+    "words": ["What", "will", "she", "do", "now"]
+  },
+  {
+    "week": 10,
+    "sentence": "Not all people like that.",
+    "words": ["Not", "all", "people", "like", "that"]
+  },
+  {
+    "week": 11,
+    "sentence": "Time has gone so fast.",
+    "words": ["Time", "has", "gone", "so", "fast"]
+  },
+  {
+    "week": 12,
+    "sentence": "More work makes good days.",
+    "words": ["More", "work", "makes", "good", "days"]
+  },
+  {
+    "week": 13,
+    "sentence": "Look into my first box.",
+    "words": ["Look", "into", "my", "first", "box"]
+  },
+  {
+    "week": 14,
+    "sentence": "There were two small birds.",
+    "words": ["There", "were", "two", "small", "birds"]
+  },
+  {
+    "week": 15,
+    "sentence": "Call me when it’s over.",
+    "words": ["Call", "me", "when", "it's", "over"]
+  },
+  {
+    "week": 16,
+    "sentence": "Find water under the bridge.",
+    "words": ["Find", "water", "under", "the", "bridge"]
+  },
+  {
+    "week": 17,
+    "sentence": "Before we sleep, eat dinner.",
+    "words": ["Before", "we", "sleep", "eat", "dinner"]
+  },
+  {
+    "week": 18,
+    "sentence": "Make sound with your mouth.",
+    "words": ["Make", "sound", "with", "your", "mouth"]
+  },
+  {
+    "week": 19,
+    "sentence": "Could you bring this here?",
+    "words": ["Could", "you", "bring", "this", "here"]
+  },
+  {
+    "week": 20,
+    "sentence": "Every child should read today.",
+    "words": ["Every", "child", "should", "read", "today"]
+  }
+]
