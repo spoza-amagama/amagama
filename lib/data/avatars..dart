@@ -1,0 +1,23 @@
+// /lib/data/avatars.dart
+const avatarAssetPaths = [
+  'assets//avatars/animal_1.png',
+  'assets//avatars/animal_2.png',
+  'assets//avatars/animal_3.png',
+  'assets//avatars/animal_4.png',
+  'assets//avatars/animal_5.png',
+  'assets//avatars/animal_6.png',
+  'assets//avatars/animal_7.png',
+  'assets//avatars/animal_8.png',
+  'assets//avatars/animal_9.png',
+  'assets//avatars/animal_10.png',
+  'assets//avatars/animal_11.png',
+  'assets//avatars/animal_12.png',
+  'assets//avatars/animal_13.png',
+  'assets//avatars/animal_14.png',
+  'assets//avatars/animal_15.png',
+  'assets//avatars/animal_16.png',
+  'assets//avatars/animal_17.png',
+  'assets//avatars/animal_18.png',
+  'assets//avatars/animal_19.png',
+  'assets//avatars/animal_20.png',
+];

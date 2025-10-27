@@ -1,6 +1,7 @@
-# /pubspec.yaml
 name: amagama
 description: Amagama – match-the-words game for 5–8 year olds
+version: 1.0.0+1
+
 environment:
   sdk: ">=3.4.0 <4.0.0"
 
@@ -8,12 +9,14 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  shared_preferences: ^2.2.3
   provider: ^6.1.2
-  audioplayers: ^6.1.0
+  shared_preferences: ^2.2.3
+  audioplayers: ^6.5.1
+  flutter_native_splash: ^2.4.7
 
 flutter:
   uses-material-design: true
+
   assets:
     - assets/avatars/
     - assets/audio/words/
@@ -22,9 +25,30 @@ flutter:
     - assets/audio/messages/bronze/
     - assets/audio/messages/silver/
     - assets/audio/messages/gold/
+    - assets/logo/amagama_logo.png
+
   fonts:
     - family: NunitoKids
       fonts:
         - asset: assets/fonts/Nunito/Nunito-ExtraBold.ttf
         - asset: assets/fonts/Nunito/Nunito-Bold.ttf
         - asset: assets/fonts/Nunito/Nunito-Regular.ttf
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.4
+
+# ⚙️ Configure app icon generation
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo/amagama_logo.png"
+  adaptive_icon_background: "#FFF8E1"
+  adaptive_icon_foreground: "assets/logo/amagama_logo.png"
+
+# ⚙️ Configure splash screen
+flutter_native_splash:
+  color: "#FFF8E1"
+  image: assets/logo/amagama_logo.png
+  android_12:
+    color: "#FFF8E1"
+    image: assets/logo/amagama_logo.png
