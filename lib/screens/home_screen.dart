@@ -1,58 +1,29 @@
+// /lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../state/index.dart';
 import '../data/index.dart';
 import '../widgets/index.dart';
 import '../screens/index.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fade;
-  late Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-    _scale = CurvedAnimation(parent: _controller, curve: Curves.elasticOut);
-
-    // Delay slightly for a smoother entrance
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
     final s = sentences[game.currentSentenceIndex];
+    final screen = MediaQuery.of(context).size;
+    final isSmall = screen.height < 720 || screen.width < 380;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Amagama'),
+        backgroundColor: const Color(0xFFFFC107),
         actions: [
           IconButton(
             tooltip: 'Reset Game',
+            icon: const Icon(Icons.refresh_rounded),
             onPressed: () async {
               final ok = await showDialog<bool>(
                 context: context,
@@ -63,13 +34,11 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel')),
                     FilledButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Reset'),
-                    ),
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Reset')),
                   ],
                 ),
               );
@@ -82,7 +51,6 @@ class _HomeScreenState extends State<HomeScreen>
                 }
               }
             },
-            icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
@@ -95,111 +63,190 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
         child: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // 🐘 Animated logo
-              Center(
-                child: FadeTransition(
-                  opacity: _fade,
-                  child: ScaleTransition(
-                    scale: _scale,
-                    child: Image.asset(
-                      'assets/logo/amagama_logo.png',
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.contain,
-                    ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final content = ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: constraints.maxWidth,
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // --- Header ---
+                      Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          Image.asset(
+                            'assets/logo/amagama_logo.png',
+                            width: isSmall ? 80 : 100,
+                            height: isSmall ? 80 : 100,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Your Sentence',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall!
+                                .copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: isSmall ? 18 : 20,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 16,
+                              ),
+                              child: Text(
+                                s.text,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium!
+                                    .copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: isSmall ? 16 : 18,
+                                    ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+
+                          // 🏆 Trophy chips that wrap automatically
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 4,
+                              runSpacing: 4,
+                              children: [
+                                _TrophyChip(
+                                  label: 'Bronze',
+                                  earned: game.currentProg.trophyBronze,
+                                  color: const Color(0xFFCD7F32),
+                                ),
+                                _TrophyChip(
+                                  label: 'Silver',
+                                  earned: game.currentProg.trophySilver,
+                                  color: const Color(0xFFC0C0C0),
+                                ),
+                                _TrophyChip(
+                                  label: 'Gold',
+                                  earned: game.currentProg.trophyGold,
+                                  color: const Color(0xFFFFD700),
+                                ),
+                                Text(
+                                  '(${game.currentProg.cyclesCompleted}/${game.cyclesTarget})',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall!
+                                      .copyWith(fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // --- Sentence Carousel ---
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: SentenceCarousel(
+                          count: sentences.length,
+                          currentIndex: game.currentSentenceIndex,
+                          isUnlocked: game.isSentenceUnlocked,
+                          onTap: (i) => game.jumpToSentence(i),
+                          sentenceText: (i) => sentences[i].text,
+                        ),
+                      ),
+
+                      // --- Buttons Section ---
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.tonalIcon(
+                                icon: const Icon(Icons.play_arrow_rounded),
+                                label: const Text('Play'),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                        builder: (_) => const PlayScreen()),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FilledButton.tonalIcon(
+                                    icon: const Icon(Icons.assessment_rounded),
+                                    label: const Text('Progress'),
+                                    style: FilledButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                            builder: (_) =>
+                                                const ProgressScreen()),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: FilledButton.tonalIcon(
+                                    icon: const Icon(Icons.settings_rounded),
+                                    label: const Text('Grown-Ups'),
+                                    style: FilledButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                            builder: (_) =>
+                                                const SettingsScreen()),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Your Sentence',
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    s.text,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _TrophyChip(
-                    label: 'Bronze',
-                    earned: game.currentProg.trophyBronze,
-                    color: const Color(0xFFCD7F32),
-                  ),
-                  const SizedBox(width: 8),
-                  _TrophyChip(
-                    label: 'Silver',
-                    earned: game.currentProg.trophySilver,
-                    color: const Color(0xFFC0C0C0),
-                  ),
-                  const SizedBox(width: 8),
-                  _TrophyChip(
-                    label: 'Gold',
-                    earned: game.currentProg.trophyGold,
-                    color: const Color(0xFFFFD700),
-                  ),
-                  const Spacer(),
-                  Text(
-                    'Cycles: ${game.currentProg.cyclesCompleted}/${game.cyclesTarget}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SentenceCarousel(
-                count: sentences.length,
-                currentIndex: game.currentSentenceIndex,
-                isUnlocked: game.isSentenceUnlocked,
-                onTap: (i) => game.jumpToSentence(i),
-                sentenceText: (i) => sentences[i].text,
-              ),
-              const SizedBox(height: 24),
-              FilledButton.tonalIcon(
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('Play'),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const PlayScreen()),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.assessment_rounded),
-                    label: const Text('Progress'),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ProgressScreen()),
-                      );
-                    },
-                  ),
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.settings_rounded),
-                    label: const Text('Grown-Ups'),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
+              );
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: content,
+              );
+            },
           ),
         ),
       ),
@@ -211,7 +258,6 @@ class _TrophyChip extends StatelessWidget {
   final String label;
   final bool earned;
   final Color color;
-
   const _TrophyChip({
     required this.label,
     required this.earned,
@@ -221,12 +267,18 @@ class _TrophyChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Chip(
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       avatar: Icon(
         Icons.emoji_events_rounded,
         color: earned ? color : Colors.black26,
+        size: 16,
       ),
-      label: Text(label),
-      backgroundColor: earned ? color.withOpacity(0.2) : Colors.black12,
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 12),
+      ),
+      backgroundColor: earned ? color.withOpacity(0.15) : Colors.black12,
       shape: StadiumBorder(
         side: BorderSide(color: earned ? color : Colors.black26),
       ),

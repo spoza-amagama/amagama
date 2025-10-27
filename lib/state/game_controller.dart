@@ -1,15 +1,20 @@
+// /lib/state/game_controller.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../data/index.dart';
 import '../models/index.dart';
 import '../services/index.dart';
 
+/// Represents each card in the memory game.
 class CardItem {
-  final int id;              // unique per tile
-  final String word;         // face
-  final String avatarPath;   // back
+  final int id; // unique per tile
+  final String word; // text on back
+  final String avatarPath; // image on front
   bool isFaceUp;
   bool isMatched;
+  bool shouldFlashRed; // 🔴 mismatch flash flag
+  bool shouldJump; // 🟩 pulse for match
+  bool shouldShake; // ❌ horizontal shake for mismatch
 
   CardItem({
     required this.id,
@@ -17,9 +22,13 @@ class CardItem {
     required this.avatarPath,
     this.isFaceUp = false,
     this.isMatched = false,
+    this.shouldFlashRed = false,
+    this.shouldJump = false,
+    this.shouldShake = false,
   });
 }
 
+/// Controls game logic, progress, and deck state.
 class GameController extends ChangeNotifier {
   final _storage = StorageService();
   final _audio = AudioService();
@@ -30,7 +39,7 @@ class GameController extends ChangeNotifier {
   int _currentSentenceIndex = 0;
   int get currentSentenceIndex => _currentSentenceIndex;
 
-  int _cyclesTarget = 6; // X (1..6)
+  int _cyclesTarget = 6;
   int get cyclesTarget => _cyclesTarget;
 
   List<SentenceProgress> _progress = [];
@@ -43,17 +52,15 @@ class GameController extends ChangeNotifier {
   bool _busy = false;
   bool get busy => _busy;
 
-  /// Initialize the game, preload audio, and rebuild the deck
+  /// Initialize the game, preload audio, and build the deck.
   Future<void> init() async {
-    // ✅ Preload all audio files once at startup
     await _audio.preloadAll();
 
-    // Load saved state
     _currentSentenceIndex = await _storage.loadCurrentSentence();
     _progress = await _storage.loadProgress();
     _cyclesTarget = await _storage.loadCyclesTarget();
 
-    // Ensure progress entries exist for all sentences
+    // Ensure progress entries exist for every sentence
     final ids = _progress.map((e) => e.sentenceId).toSet();
     for (final s in sentences) {
       if (!ids.contains(s.id)) {
@@ -66,7 +73,6 @@ class GameController extends ChangeNotifier {
         ));
       }
     }
-
     _progress.sort((a, b) => a.sentenceId.compareTo(b.sentenceId));
     await _storage.saveProgress(_progress);
 
@@ -74,7 +80,7 @@ class GameController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// ✅ Safe getter — never throws “Bad state: No element”
+  /// Safe getter — never throws.
   SentenceProgress get currentProg {
     if (_progress.isEmpty) {
       final fallback = SentenceProgress(
@@ -102,7 +108,6 @@ class GameController extends ChangeNotifier {
       _storage.saveProgress(_progress);
       return newProg;
     }
-
     return match.first;
   }
 
@@ -121,12 +126,13 @@ class GameController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Builds a random deck of word–avatar pairs.
   void _buildDeck() {
     final s = sentences[_currentSentenceIndex];
     final tokens = List<String>.from(s.words);
     tokens.shuffle(_rand);
 
-    // Select 5 unique words
+    // Pick up to 5 unique words
     final unique = <String>[];
     for (final w in tokens) {
       if (!unique.contains(w)) unique.add(w);
@@ -136,7 +142,7 @@ class GameController extends ChangeNotifier {
       unique.add(tokens[_rand.nextInt(tokens.length)]);
     }
 
-    // Pair them and make 10 cards with random avatars
+    // Pair them with random avatars
     final avatarPool = List<String>.from(avatarAssetPaths)..shuffle(_rand);
     final pickedAvatars = avatarPool.take(10).toList();
 
@@ -151,13 +157,16 @@ class GameController extends ChangeNotifier {
         ));
       }
     }
+
     items.shuffle(_rand);
     _deck = items;
     _firstPick = null;
   }
 
+  /// Handle a card flip — matching, flashing, shaking, or reverting.
   Future<void> flip(CardItem item) async {
     if (_busy || item.isMatched || item.isFaceUp) return;
+
     item.isFaceUp = true;
     notifyListeners();
 
@@ -167,30 +176,69 @@ class GameController extends ChangeNotifier {
     }
 
     _busy = true;
-    if (_firstPick!.word == item.word) {
+    final other = _firstPick!;
+
+    // ✅ MATCH
+    if (other.word == item.word) {
       await _audio.playMatch();
-      _firstPick!.isMatched = true;
+      other.isMatched = true;
       item.isMatched = true;
+
+      // Subtle pulse jump
+      other.shouldJump = true;
+      item.shouldJump = true;
+      notifyListeners();
+
+      await Future.delayed(const Duration(milliseconds: 250));
+      other.shouldJump = false;
+      item.shouldJump = false;
+
       _firstPick = null;
       _busy = false;
       notifyListeners();
       _checkRoundComplete();
-    } else {
-      await _audio.playMismatch();
-      await Future.delayed(const Duration(milliseconds: 700));
-      _firstPick!.isFaceUp = false;
-      item.isFaceUp = false;
-      _firstPick = null;
-      _busy = false;
-      notifyListeners();
+      return;
     }
+
+    // ❌ MISMATCH — both flash red, shake, and flip back
+    await _audio.playMismatch();
+
+    // Allow a frame for both to appear face-up
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    // Step 1: flash + shake
+    other.shouldFlashRed = item.shouldFlashRed = true;
+    other.shouldShake = item.shouldShake = true;
+    notifyListeners();
+
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    // Step 2: stop shaking, keep red briefly
+    other.shouldShake = item.shouldShake = false;
+    notifyListeners();
+
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    // Step 3: reset + flip back
+    other
+      ..shouldFlashRed = false
+      ..isFaceUp = false;
+    item
+      ..shouldFlashRed = false
+      ..isFaceUp = false;
+
+    _firstPick = null;
+    _busy = false;
+    notifyListeners();
   }
 
+  /// Check if round complete and update trophies/unlocks.
   Future<void> _checkRoundComplete() async {
     final allMatched = _deck.every((c) => c.isMatched);
     if (!allMatched) return;
 
-    final idx = _progress.indexWhere((p) => p.sentenceId == _currentSentenceIndex);
+    final idx =
+        _progress.indexWhere((p) => p.sentenceId == _currentSentenceIndex);
     if (idx == -1) return;
 
     var p = _progress[idx];
@@ -218,11 +266,9 @@ class GameController extends ChangeNotifier {
     );
     _progress[idx] = p;
 
-    // Unlock next sentence if needed
-    if (p.cyclesCompleted >= _cyclesTarget) {
-      if (_currentSentenceIndex < sentences.length - 1) {
-        _currentSentenceIndex += 1;
-      }
+    if (p.cyclesCompleted >= _cyclesTarget &&
+        _currentSentenceIndex < sentences.length - 1) {
+      _currentSentenceIndex += 1;
       await _storage.saveCurrentSentence(_currentSentenceIndex);
     }
 
