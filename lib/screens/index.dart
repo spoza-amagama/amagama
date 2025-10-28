@@ -1,6 +1,6 @@
 // AUTO-GENERATED BARREL FILE
 // FULL FILE PATH: lib/screens/index.dart
-// GENERATED: 2025-10-27 14:35:15.830112
+// GENERATED: 2025-10-28 18:04:15.501354
 
 export 'home_screen.dart';
 export 'play_screen.dart';

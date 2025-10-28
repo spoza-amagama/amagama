@@ -66,34 +66,34 @@ ThemeData buildTheme({Brightness brightness = Brightness.light}) {
 
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.resolveWith<Color>(
+        backgroundColor: WidgetStateProperty.resolveWith<Color>(
           (states) {
-            if (states.contains(MaterialState.pressed)) {
-              return primaryColor.withOpacity(0.8); // darker on press
+            if (states.contains(WidgetState.pressed)) {
+              return primaryColor.withValues(alpha: 0.8); // darker on press
             }
             return primaryColor;
           },
         ),
-        foregroundColor: MaterialStateProperty.all<Color>(textColor),
-        elevation: MaterialStateProperty.resolveWith<double>(
+        foregroundColor: WidgetStateProperty.all<Color>(textColor),
+        elevation: WidgetStateProperty.resolveWith<double>(
           (states) {
-            if (states.contains(MaterialState.pressed)) return 1;
-            if (states.contains(MaterialState.hovered)) return 6;
+            if (states.contains(WidgetState.pressed)) return 1;
+            if (states.contains(WidgetState.hovered)) return 6;
             return 3;
           },
         ),
-        overlayColor: MaterialStateProperty.all<Color>(
+        overlayColor: WidgetStateProperty.all<Color>(
           Colors.black12, // subtle tap ripple
         ),
-        shadowColor: MaterialStateProperty.all<Color>(
-          isDark ? Colors.black54 : Colors.grey.withOpacity(0.4),
+        shadowColor: WidgetStateProperty.all<Color>(
+          isDark ? Colors.black54 : Colors.grey.withValues(alpha: 0.4),
         ),
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+        padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
           const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
         animationDuration: const Duration(milliseconds: 120),

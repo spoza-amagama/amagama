@@ -1,4 +1,3 @@
-// /lib/state/game_controller.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../data/index.dart';
@@ -180,7 +179,7 @@ class GameController extends ChangeNotifier {
 
     // ✅ MATCH
     if (other.word == item.word) {
-      await _audio.playMatch();
+      // await _audio.playMatch();
       other.isMatched = true;
       item.isMatched = true;
 
@@ -201,7 +200,7 @@ class GameController extends ChangeNotifier {
     }
 
     // ❌ MISMATCH — both flash red, shake, and flip back
-    await _audio.playMismatch();
+    // await _audio.playMismatch();
 
     // Allow a frame for both to appear face-up
     await Future.delayed(const Duration(milliseconds: 50));
@@ -290,5 +289,13 @@ class GameController extends ChangeNotifier {
     _currentSentenceIndex = 0;
     _progress = [];
     await init();
+  }
+
+  /// 🧠 NEW: Dynamic progress message for the end-of-round dialog
+  String get progressMessage {
+    final total = sentences.length;
+    final current = _currentSentenceIndex + 1;
+    final percent = ((current / total) * 100).round();
+    return "You’ve mastered $current of $total sentences ($percent%)!";
   }
 }

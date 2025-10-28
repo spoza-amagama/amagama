@@ -278,7 +278,7 @@ class _TrophyChip extends StatelessWidget {
         label,
         style: const TextStyle(fontSize: 12),
       ),
-      backgroundColor: earned ? color.withOpacity(0.15) : Colors.black12,
+      backgroundColor: earned ? color.withValues(alpha: 0.15) : Colors.black12,
       shape: StadiumBorder(
         side: BorderSide(color: earned ? color : Colors.black26),
       ),

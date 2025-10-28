@@ -96,7 +96,7 @@ class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
         : Colors.yellow.shade200;
 
     final textColor =
-        widget.item.isMatched ? Colors.white : Colors.black.withOpacity(0.85);
+        widget.item.isMatched ? Colors.white : Colors.black.withValues(alpha: 0.85);
 
     final isFlashingRed = widget.item.shouldFlashRed;
     final isShaking = widget.item.shouldShake;
@@ -131,7 +131,7 @@ class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
                     color: baseColor,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         offset: const Offset(2, 2),
                         blurRadius: 4,
                       ),
@@ -180,7 +180,7 @@ class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
                                     fontSize: widget.size * 0.22,
                                     shadows: [
                                       Shadow(
-                                        color: Colors.black.withOpacity(0.25),
+                                        color: Colors.black.withValues(alpha: 0.25),
                                         offset: const Offset(1, 1),
                                         blurRadius: 1,
                                       ),
@@ -200,7 +200,7 @@ class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.redAccent.withOpacity(0.6),
+                            color: Colors.redAccent.withValues(alpha: 0.6),
                           ),
                         ),
                       ),

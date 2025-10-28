@@ -1,9 +1,11 @@
-// /lib/screens/play_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../state/index.dart';
-import '../widgets/index.dart';
-import '../data/index.dart';
+import 'package:amagama/data/index.dart';
+import 'package:amagama/state/index.dart';
+import 'package:amagama/models/sentence.dart';
+import 'package:amagama/widgets/sentence_header.dart';
+import 'package:amagama/widgets/card_grid.dart';
+import 'package:amagama/widgets/play_audio_manager.dart';
 
 class PlayScreen extends StatefulWidget {
   const PlayScreen({super.key});
@@ -12,23 +14,54 @@ class PlayScreen extends StatefulWidget {
   State<PlayScreen> createState() => _PlayScreenState();
 }
 
-class _PlayScreenState extends State<PlayScreen> {
+class _PlayScreenState extends State<PlayScreen>
+    with SingleTickerProviderStateMixin {
+  bool _showEndDialog = false;
+  late AnimationController _sentencePulse;
+
   @override
   void initState() {
     super.initState();
+    _sentencePulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..addStatusListener((status) {
+        if (status == AnimationStatus.completed) _sentencePulse.reverse();
+      });
 
-    // ▶️ Play sentence audio when screen loads
+    // Play intro sentence on mount
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final game = context.read<GameController>();
-      final s = sentences[game.currentSentenceIndex];
-      game.audioService.playSentence(s.id);
+      final sentence = sentences[game.currentSentenceIndex];
+      context
+          .read<PlayAudioManagerController>()
+          .playSentence(sentence.id.toString());
+      _triggerSentencePulse();
     });
+  }
+
+  void _triggerSentencePulse() {
+    if (!_sentencePulse.isAnimating) _sentencePulse.forward();
+  }
+
+  @override
+  void dispose() {
+    _sentencePulse.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
-    final s = sentences[game.currentSentenceIndex];
+    final sentence = sentences[game.currentSentenceIndex];
+
+    // When all cards are matched
+    final allMatched =
+        game.deck.isNotEmpty && game.deck.every((c) => c.isMatched);
+    if (allMatched && !_showEndDialog) {
+      _showEndDialog = true;
+      _handleAllMatched(game, sentence);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -38,126 +71,83 @@ class _PlayScreenState extends State<PlayScreen> {
         ),
         backgroundColor: const Color(0xFFFFC107),
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
-          const double spacing = 12.0;
-          final totalCards = game.deck.length;
-
-          // 🔢 Find best grid fit (auto size + columns)
-          int bestColumns = 2;
-          double bestCardSize = 0;
-
-          for (int cols = 2; cols <= totalCards; cols++) {
-            final rows = (totalCards / cols).ceil();
-            final totalHorizontalSpacing = (cols - 1) * spacing;
-            final totalVerticalSpacing = (rows - 1) * spacing + 60; // extra for sentence text
-            final cardWidth = (width - totalHorizontalSpacing - 24) / cols;
-            final cardHeight = (height - totalVerticalSpacing - 24) / rows;
-            final size = cardWidth < cardHeight ? cardWidth : cardHeight;
-            if (size > bestCardSize) {
-              bestCardSize = size;
-              bestColumns = cols;
-            }
-          }
-
-          final cardSize = bestCardSize;
-          final columns = bestColumns;
-          final rows = (totalCards / columns).ceil();
-          final deck = game.deck;
-
-          return Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFFFF8E1), Color(0xFFFFECB3)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              SentenceHeader(
+                text: sentence.text,
+                controller: _sentencePulse,
               ),
-            ),
-            padding: const EdgeInsets.all(spacing),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    s.text,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                        ),
-                  ),
+              Expanded(
+                child: CardGrid(
+                  onWordPlayed: (word) =>
+                      context.read<PlayAudioManagerController>().playWord(word),
+                  onSentenceComplete: (sentenceId) {
+                    context
+                        .read<PlayAudioManagerController>()
+                        .playSentence(sentenceId);
+                    _triggerSentencePulse();
+                  },
                 ),
-                Expanded(
-                  child: Center(
-                    child: LayoutBuilder(
-                      builder: (context, box) {
-                        final totalWidth = box.maxWidth;
-                        final cardWidgets = <Widget>[];
-
-                        // Split deck into rows
-                        for (int r = 0; r < rows; r++) {
-                          final start = r * columns;
-                          final end = (start + columns > totalCards)
-                              ? totalCards
-                              : start + columns;
-                          final rowCards = deck.sublist(start, end);
-
-                          final rowWidth =
-                              (rowCards.length * cardSize) +
-                                  ((rowCards.length - 1) * spacing);
-                          final leftPadding =
-                              (totalWidth - rowWidth) / 2; // center incomplete rows
-
-                          cardWidgets.add(
-                            Padding(
-                              padding: EdgeInsets.only(
-                                top: r == 0 ? 0 : spacing,
-                                left: leftPadding > 0 ? leftPadding : 0,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: rowCards
-                                    .map(
-                                      (item) => Padding(
-                                        padding: EdgeInsets.only(
-                                            right: rowCards.last == item
-                                                ? 0
-                                                : spacing),
-                                        child: RoundCard(
-                                          item: item,
-                                          lockInput: game.busy,
-                                          // ✅ FIX: Connect flip logic
-                                          onFlip: () async {
-                                            await context
-                                                .read<GameController>()
-                                                .flip(item);
-                                          },
-                                          size: cardSize,
-                                          avatarScale: 0.8,
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                              ),
-                            ),
-                          );
-                        }
-
-                        return Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: cardWidgets,
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+              ),
+            ],
+          ),
+          const PlayAudioManager(), // Persistent overlay audio controller
+        ],
       ),
     );
+  }
+
+  Future<void> _handleAllMatched(GameController game, Sentence sentence) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    context
+        .read<PlayAudioManagerController>()
+        .playSentence(sentence.id.toString());
+    _triggerSentencePulse();
+
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        final msg =
+            "You’ve completed Sentence ${game.currentSentenceIndex + 1}!";
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFFECB3),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Center(
+            child: Text(
+              "🎉 Great job!",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(sentence.text,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 10),
+              Text(msg,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 20),
+              FilledButton.tonalIcon(
+                icon: const Icon(Icons.arrow_forward_rounded),
+                label: const Text("Next"),
+                onPressed: () => Navigator.pop(context, true),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return;
+    setState(() => _showEndDialog = false);
+    game.jumpToSentence(game.currentSentenceIndex);
   }
 }
