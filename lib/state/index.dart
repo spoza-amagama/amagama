@@ -1,5 +1,3 @@
-// AUTO-GENERATED BARREL FILE
-// FULL FILE PATH: lib/state/index.dart
-// GENERATED: 2025-10-28 18:04:15.501167
-
+// AUTO-GENERATED FILE — DO NOT EDIT
 export 'game_controller.dart';
+export 'audio_controller_provider.dart';

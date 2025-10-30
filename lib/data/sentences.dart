@@ -8,102 +8,102 @@ import '../models/index.dart';
 /// 20 sentences introducing 100 high-frequency English words.
 /// Each sentence contains 5 key words that are reused throughout the app.
 final List<Sentence> sentences = [
-  Sentence(
+  const Sentence(
     id: 1,
     text: "Cats sit on the mat.",
     words: ["Cats", "sit", "on", "the", "mat"],
   ),
-  Sentence(
+  const Sentence(
     id: 2,
     text: "I see you and him.",
     words: ["I", "see", "you", "and", "him"],
   ),
-  Sentence(
+  const Sentence(
     id: 3,
     text: "She had one big dog.",
     words: ["She", "had", "one", "big", "dog"],
   ),
-  Sentence(
+  const Sentence(
     id: 4,
     text: "We can go with them.",
     words: ["We", "can", "go", "with", "them"],
   ),
-  Sentence(
+  const Sentence(
     id: 5,
     text: "He is in the house.",
     words: ["He", "is", "in", "the", "house"],
   ),
-  Sentence(
+  const Sentence(
     id: 6,
     text: "They are at the park.",
     words: ["They", "are", "at", "the", "park"],
   ),
-  Sentence(
+  const Sentence(
     id: 7,
     text: "This was for your book.",
     words: ["This", "was", "for", "your", "book"],
   ),
-  Sentence(
+  const Sentence(
     id: 8,
     text: "From where did you come?",
     words: ["From", "where", "did", "you", "come"],
   ),
-  Sentence(
+  const Sentence(
     id: 9,
     text: "What will she do now?",
     words: ["What", "will", "she", "do", "now"],
   ),
-  Sentence(
+  const Sentence(
     id: 10,
     text: "Not all people like that.",
     words: ["Not", "all", "people", "like", "that"],
   ),
-  Sentence(
+  const Sentence(
     id: 11,
     text: "Time has gone so fast.",
     words: ["Time", "has", "gone", "so", "fast"],
   ),
-  Sentence(
+  const Sentence(
     id: 12,
     text: "More work makes good days.",
     words: ["More", "work", "makes", "good", "days"],
   ),
-  Sentence(
+  const Sentence(
     id: 13,
     text: "Look into my first box.",
     words: ["Look", "into", "my", "first", "box"],
   ),
-  Sentence(
+  const Sentence(
     id: 14,
     text: "There were two small birds.",
     words: ["There", "were", "two", "small", "birds"],
   ),
-  Sentence(
+  const Sentence(
     id: 15,
     text: "Call me when it's over.",
     words: ["Call", "me", "when", "it's", "over"],
   ),
-  Sentence(
+  const Sentence(
     id: 16,
     text: "Find water under the bridge.",
     words: ["Find", "water", "under", "the", "bridge"],
   ),
-  Sentence(
+  const Sentence(
     id: 17,
     text: "Before we sleep, eat dinner.",
     words: ["Before", "we", "sleep", "eat", "dinner"],
   ),
-  Sentence(
+  const Sentence(
     id: 18,
     text: "Make sound with your mouth.",
     words: ["Make", "sound", "with", "your", "mouth"],
   ),
-  Sentence(
+  const Sentence(
     id: 19,
     text: "Could you bring this here?",
     words: ["Could", "you", "bring", "this", "here"],
   ),
-  Sentence(
+  const Sentence(
     id: 20,
     text: "Every child should read today.",
     words: ["Every", "child", "should", "read", "today"],

@@ -1,11 +1,21 @@
-// /lib/main.dart
+// 📄 lib/main.dart
+// Entry point for the Amagama app.
+// Initializes game state, audio controller, and global providers.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'state/index.dart';
 import 'screens/index.dart';
 import 'theme/theme.dart';
+import 'services/audio_service.dart';
+import 'controllers/card_grid_controller.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ Preload all audio assets at startup
+  await AudioService().preloadAll();
+
   runApp(const AmagamaApp());
 }
 
@@ -14,9 +24,19 @@ class AmagamaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => GameController()..init(),
+    return MultiProvider(
+      providers: [
+        // 🎮 Core game state (words, deck, progress)
+        ChangeNotifierProvider(create: (_) => GameController()..init()),
+
+        // 🔊 Global audio management
+        ChangeNotifierProvider(create: (_) => AudioControllerProvider()),
+
+        // 🧩 Card grid logic (flip, glow, audio)
+        ChangeNotifierProvider(create: (_) => CardGridController()),
+      ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Amagama',
         theme: buildTheme(),
         home: const LoadingWrapper(),
@@ -37,7 +57,9 @@ class LoadingWrapper extends StatelessWidget {
       return const Scaffold(
         backgroundColor: Color(0xFFFFF8E1),
         body: Center(
-          child: CircularProgressIndicator(color: Color(0xFFFFC107)),
+          child: CircularProgressIndicator(
+            color: Color(0xFFFFC107),
+          ),
         ),
       );
     }

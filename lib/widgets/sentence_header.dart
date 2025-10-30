@@ -1,6 +1,10 @@
+// lib/widgets/sentence_header.dart
 import 'package:flutter/material.dart';
+import 'animated_sentence_text.dart';
+import 'sparkle_layer.dart';
 
-class SentenceHeader extends StatelessWidget {
+/// Combines animated sentence text and sparkles into one header component.
+class SentenceHeader extends StatefulWidget {
   final String text;
   final AnimationController controller;
 
@@ -11,29 +15,39 @@ class SentenceHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final animation = Tween<double>(begin: 1.0, end: 1.1)
-        .animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
+  State<SentenceHeader> createState() => _SentenceHeaderState();
+}
 
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (_, __) {
-        return Transform.scale(
-          scale: animation.value,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                    color: Colors.brown.shade800,
-                  ),
+class _SentenceHeaderState extends State<SentenceHeader> {
+  final GlobalKey<SparkleLayerState> _sparkleKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addStatusListener((status) {
+      if (status == AnimationStatus.forward) {
+        _sparkleKey.currentState?.triggerSparkles();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            SparkleLayer(key: _sparkleKey),
+            AnimatedSentenceText(
+              text: widget.text,
+              controller: widget.controller,
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }

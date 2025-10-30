@@ -1,50 +1,70 @@
-// FULL FILE PATH: tool/rebuild_barrels.dart
+// /tools/rebuild_barrels.dart
 import 'dart:io';
+import 'package:path/path.dart' as p;
 
-/// Recursively rebuilds all `index.dart` barrel files under lib/.
-void main() async {
+/// 🔄 Barrel File Rebuilder (FINAL FIX)
+/// ------------------------------------
+/// Scans `lib/` for any `index.dart` files and automatically updates
+/// their exports to include other `.dart` files in the same folder.
+///
+/// ✅ Fixes:
+/// - Removes duplicate folder prefixes (e.g. `state/state/...`)
+/// - Uses clean relative paths per directory
+/// - Skips empty folders and missing files
+///
+/// ▶ Run once:
+///   dart run tools/rebuild_barrels.dart
+///
+/// ▶ Watch continuously:
+///   dart run tools/rebuild_barrels.dart --watch
+///
+Future<void> main(List<String> args) async {
   final libDir = Directory('lib');
   if (!libDir.existsSync()) {
-    stderr.writeln('Error: lib/ directory not found.');
+    stderr.writeln('❌ No "lib/" directory found.');
     exit(1);
   }
 
-  print('🔄 Rebuilding barrel files under lib/...');
+  final watch = args.contains('--watch');
+  print('🔄 Rebuilding all barrel files...');
+  await _rebuildBarrels(libDir);
+  print('✅ Barrel rebuild complete.');
 
-  int updatedCount = 0;
-  await for (final entity in libDir.list(recursive: true, followLinks: false)) {
-    if (entity is Directory) {
-      final dartFiles = entity
-          .listSync()
-          .whereType<File>()
-          .where((f) =>
-              f.path.endsWith('.dart') &&
-              !f.path.endsWith('index.dart') &&
-              !f.path.contains('/widgets.dart')) // avoid ambiguous duplicates
-          .toList();
-
-      if (dartFiles.isEmpty) continue;
-
-      final buffer = StringBuffer();
-      final relPath = entity.path.replaceFirst('lib/', '');
-      buffer.writeln('// AUTO-GENERATED BARREL FILE');
-      buffer.writeln('// FULL FILE PATH: ${entity.path}/index.dart');
-      buffer.writeln('// GENERATED: ${DateTime.now()}\n');
-
-      final exports = dartFiles
-          .map((f) => "export '${f.uri.pathSegments.last}';")
-          .toList()
-        ..sort();
-
-      for (final line in exports) {
-        buffer.writeln(line);
+  if (watch) {
+    print('👀 Watching for changes...');
+    libDir.watch(recursive: true).listen((event) async {
+      if (event.type == FileSystemEvent.modify ||
+          event.type == FileSystemEvent.create ||
+          event.type == FileSystemEvent.delete) {
+        await _rebuildBarrels(libDir);
       }
-
-      final indexFile = File('${entity.path}/index.dart');
-      indexFile.writeAsStringSync(buffer.toString());
-      updatedCount++;
-    }
+    });
   }
+}
 
-  print('✅ Barrel rebuild complete. $updatedCount index.dart files updated.');
+Future<void> _rebuildBarrels(Directory libDir) async {
+  for (final entity in libDir.listSync(recursive: true)) {
+    if (entity is! File) continue;
+    if (!entity.path.endsWith('index.dart')) continue;
+
+    final folder = entity.parent;
+    final dartFiles = folder
+        .listSync()
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.dart') && !f.path.endsWith('index.dart'))
+        .toList();
+
+    if (dartFiles.isEmpty) continue;
+
+    final folderPath = folder.path;
+    final exports = dartFiles.map((file) {
+      final relPath = p.relative(file.path, from: folderPath);
+      return "export '$relPath';";
+    }).join('\n');
+
+    final content = '// AUTO-GENERATED FILE — DO NOT EDIT\n$exports\n';
+    entity.writeAsStringSync(content);
+
+    print('🧩 Updated: ${p.relative(entity.path, from: libDir.path)}');
+  }
 }

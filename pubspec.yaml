@@ -38,6 +38,14 @@ flutter:
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.4
+  flutter_test:
+    sdk: flutter
+  lints: ^6.0.0
+
+scripts:
+  rebuild: dart tools/rebuild_barrels.dart
+  watch: dart tools/rebuild_barrels.dart --watch
+
 
 # ⚙️ Configure app icon generation
 flutter_launcher_icons:

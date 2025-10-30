@@ -1,7 +1,15 @@
-// /lib/widgets/round_card.dart
-import 'package:flutter/material.dart';
-import '../state/index.dart';
+// 📄 lib/widgets/round_card.dart
+//
+// 🌀 RoundCard
+// ----------------------
+// Purely visual, animated card widget used in the play grid.
+// Handles flip, pulse, and shake animations for game cards.
+// All game logic, audio, and state are handled externally
+// by [CardFlipController] and [CardGridController].
+
 import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:amagama/models/card_item.dart';
 
 class RoundCard extends StatefulWidget {
   final CardItem item;
@@ -25,62 +33,64 @@ class RoundCard extends StatefulWidget {
 
 class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
   bool _isFlipped = false;
-  bool _hasPulsed = false; // ✅ ensures pulse happens only once
+  bool _hasPulsed = false;
 
-  late final AnimationController _flipController;
-  late final AnimationController _pulseController;
-  late final Animation<double> _flipAnimation;
-  late final Animation<double> _pulseAnimation;
+  late final AnimationController _flipCtrl;
+  late final AnimationController _pulseCtrl;
+  late final Animation<double> _flipAnim;
+  late final Animation<double> _pulseAnim;
 
   @override
   void initState() {
     super.initState();
 
-    _flipController = AnimationController(
+    _flipCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
     );
 
-    _flipAnimation = Tween<double>(begin: 0, end: math.pi).animate(
-      CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
+    _flipAnim = Tween<double>(begin: 0, end: math.pi).animate(
+      CurvedAnimation(parent: _flipCtrl, curve: Curves.easeInOut),
     );
 
-    _pulseController = AnimationController(
+    _pulseCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
       lowerBound: 0.0,
       upperBound: 0.1,
     );
 
-    _pulseAnimation =
-        CurvedAnimation(parent: _pulseController, curve: Curves.easeOut);
+    _pulseAnim = CurvedAnimation(
+      parent: _pulseCtrl,
+      curve: Curves.easeOut,
+    );
   }
 
   @override
   void didUpdateWidget(RoundCard oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // 🔄 Flip when faceUp changes
+    // 🔁 Flip animation sync
     if (widget.item.isFaceUp != _isFlipped) {
       if (widget.item.isFaceUp) {
-        _flipController.forward();
+        _flipCtrl.forward();
       } else {
-        _flipController.reverse();
+        _flipCtrl.reverse();
       }
       _isFlipped = widget.item.isFaceUp;
     }
 
-    // 💚 Pulse once on first match
+    // 💚 Pulse when matched for first time
     if (widget.item.isMatched && !_hasPulsed) {
-      _pulseController.forward(from: 0);
+      _pulseCtrl.forward(from: 0);
       _hasPulsed = true;
     }
   }
 
   @override
   void dispose() {
-    _flipController.dispose();
-    _pulseController.dispose();
+    _flipCtrl.dispose();
+    _pulseCtrl.dispose();
     super.dispose();
   }
 
@@ -95,24 +105,23 @@ class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
         ? Colors.green.shade600
         : Colors.yellow.shade200;
 
-    final textColor =
-        widget.item.isMatched ? Colors.white : Colors.black.withValues(alpha: 0.85);
+    final textColor = widget.item.isMatched
+        ? Colors.white
+        : Colors.black.withValues(alpha: 0.85);
 
     final isFlashingRed = widget.item.shouldFlashRed;
     final isShaking = widget.item.shouldShake;
-    final scale = 1 + _pulseAnimation.value;
 
     return GestureDetector(
       onTap: _handleTap,
       child: AnimatedBuilder(
-        animation: Listenable.merge([_flipController, _pulseController]),
-        builder: (context, child) {
-          final isFront = _flipAnimation.value < math.pi / 2;
-
-          // Shake offset (sin wave oscillation)
+        animation: Listenable.merge([_flipCtrl, _pulseCtrl]),
+        builder: (context, _) {
+          final isFront = _flipAnim.value < math.pi / 2;
           final shakeOffset = isShaking
               ? math.sin(DateTime.now().millisecondsSinceEpoch * 0.05) * 6
               : 0.0;
+          final scale = 1 + _pulseAnim.value;
 
           return Transform.translate(
             offset: Offset(shakeOffset, 0),
@@ -122,7 +131,7 @@ class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
                 alignment: Alignment.center,
                 transform: Matrix4.identity()
                   ..setEntry(3, 2, 0.001)
-                  ..rotateY(_flipAnimation.value),
+                  ..rotateY(_flipAnim.value),
                 child: Container(
                   width: widget.size,
                   height: widget.size,
@@ -140,16 +149,16 @@ class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // FRONT — avatar
+                      // 🖼️ FRONT — avatar image
                       IgnorePointer(
                         ignoring: !isFront,
                         child: Opacity(
                           opacity: isFront ? 1 : 0,
-                          child: ClipOval(
-                            child: Padding(
-                              padding: EdgeInsets.all(widget.size * 0.15),
+                          child: Padding(
+                            padding: EdgeInsets.all(widget.size * 0.15),
+                            child: ClipOval(
                               child: Image.asset(
-                                widget.item.avatarPath,
+                                widget.item.avatarPath ?? '',
                                 fit: BoxFit.contain,
                                 width: widget.size * widget.avatarScale,
                                 height: widget.size * widget.avatarScale,
@@ -159,7 +168,7 @@ class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
                         ),
                       ),
 
-                      // BACK — word (non-mirrored)
+                      // 🔤 BACK — text (word)
                       IgnorePointer(
                         ignoring: isFront,
                         child: Opacity(
@@ -169,8 +178,8 @@ class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
                             transform: Matrix4.identity()..rotateY(math.pi),
                             child: ClipOval(
                               child: Container(
-                                alignment: Alignment.center,
                                 color: Colors.transparent,
+                                alignment: Alignment.center,
                                 child: Text(
                                   widget.item.word,
                                   textAlign: TextAlign.center,
@@ -193,10 +202,10 @@ class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
                         ),
                       ),
 
-                      // 🔴 FLASH overlay (mismatch)
+                      // 🔴 FLASH overlay for mismatched attempt
                       AnimatedOpacity(
                         opacity: isFlashingRed ? 1 : 0,
-                        duration: const Duration(milliseconds: 100),
+                        duration: const Duration(milliseconds: 120),
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,

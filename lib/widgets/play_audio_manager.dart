@@ -1,36 +1,46 @@
+// lib/widgets/play_audio_manager.dart
 import 'package:flutter/material.dart';
 import 'package:amagama/services/audio_service.dart';
 
-class PlayAudioManagerController extends ChangeNotifier {
-  final AudioService _audio = AudioService();
-
-  Future<void> playWord(String word) async {
-    await _audio.playWord(word);
-  }
-
-  Future<void> playSentence(String sentenceId) async {
-    try {
-      final id = int.parse(sentenceId);
-      await _audio.playSentence(id);
-    } catch (_) {}
-  }
-
-  Future<void> disposeManager() async {
-    await _audio.dispose();
-  }
-}
-
+/// Centralized widget for managing queued audio playback.
+/// Ensures word and sentence sounds do not overlap.
 class PlayAudioManager extends StatefulWidget {
-  const PlayAudioManager({super.key});
+  final String currentWord;
+  final bool shouldPlayWord;
+  final String currentSentenceId;
+  final bool shouldPlaySentence;
+
+  const PlayAudioManager({
+    super.key,
+    required this.currentWord,
+    required this.shouldPlayWord,
+    required this.currentSentenceId,
+    required this.shouldPlaySentence,
+  });
 
   @override
   State<PlayAudioManager> createState() => _PlayAudioManagerState();
 }
 
 class _PlayAudioManagerState extends State<PlayAudioManager> {
+  final AudioService _audio = AudioService();
+
   @override
-  Widget build(BuildContext context) {
-    // invisible widget — audio only
-    return const SizedBox.shrink();
+  void didUpdateWidget(covariant PlayAudioManager oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 🎧 Word audio trigger
+    if (widget.shouldPlayWord && widget.currentWord != oldWidget.currentWord) {
+      _audio.playWord(widget.currentWord);
+    }
+
+    // 🗣️ Sentence audio trigger
+    if (widget.shouldPlaySentence &&
+        widget.currentSentenceId != oldWidget.currentSentenceId) {
+      _audio.playSentence(widget.currentSentenceId);
+    }
   }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }

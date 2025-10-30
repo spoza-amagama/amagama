@@ -1,0 +1,7 @@
+targets:
+  $default:
+    builders:
+      rebuild_barrels:
+        run_before:
+          - source_gen
+        import: "package:build_runner_core/build_runner_core.dart"

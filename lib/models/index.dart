@@ -1,6 +1,4 @@
-// AUTO-GENERATED BARREL FILE
-// FULL FILE PATH: lib/models/index.dart
-// GENERATED: 2025-10-28 18:04:15.497006
-
-export 'progress.dart';
+// AUTO-GENERATED FILE — DO NOT EDIT
+export 'card_item.dart';
 export 'sentence.dart';
+export 'progress.dart';

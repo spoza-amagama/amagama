@@ -1,5 +1,3 @@
-// AUTO-GENERATED BARREL FILE
-// FULL FILE PATH: lib/audio/controllers/index.dart
-// GENERATED: 2025-10-28 18:04:15.501605
-
+// AUTO-GENERATED FILE — DO NOT EDIT
 export 'audio_controller.dart';
+export 'grid_layout_helper.dart';

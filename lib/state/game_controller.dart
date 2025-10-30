@@ -4,28 +4,6 @@ import '../data/index.dart';
 import '../models/index.dart';
 import '../services/index.dart';
 
-/// Represents each card in the memory game.
-class CardItem {
-  final int id; // unique per tile
-  final String word; // text on back
-  final String avatarPath; // image on front
-  bool isFaceUp;
-  bool isMatched;
-  bool shouldFlashRed; // 🔴 mismatch flash flag
-  bool shouldJump; // 🟩 pulse for match
-  bool shouldShake; // ❌ horizontal shake for mismatch
-
-  CardItem({
-    required this.id,
-    required this.word,
-    required this.avatarPath,
-    this.isFaceUp = false,
-    this.isMatched = false,
-    this.shouldFlashRed = false,
-    this.shouldJump = false,
-    this.shouldShake = false,
-  });
-}
 
 /// Controls game logic, progress, and deck state.
 class GameController extends ChangeNotifier {
