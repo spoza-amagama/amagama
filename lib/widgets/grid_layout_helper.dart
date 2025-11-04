@@ -12,8 +12,13 @@ class GridLayoutHelper {
     required this.topPadding,
   });
 
-  static GridLayoutHelper calculate(double width, double height, int totalCards) {
-    final baseSpacing = width < 400 ? 8 : width < 600 ? 10 : 14;
+  static GridLayoutHelper calculate(
+      double width, double height, int totalCards) {
+    final baseSpacing = width < 400
+        ? 8
+        : width < 600
+            ? 10
+            : 14;
     int bestCols = 2;
     int bestRows = (totalCards / bestCols).ceil();
     double bestCardSize = 0;

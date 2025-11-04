@@ -3,7 +3,7 @@
 // for both words and sentences using AudioService.
 
 import 'package:flutter/material.dart';
-import 'package:amagama/services/audio_service.dart';
+import 'package:amagama/services/audio/audio_service.dart';
 
 class AudioTrigger extends StatefulWidget {
   /// The type of audio to play: 'word' or 'sentence'
@@ -46,7 +46,6 @@ class _AudioTriggerState extends State<AudioTrigger> {
         // Sentence IDs are strings but map cleanly to numeric audio files
         final index = int.tryParse(id) ?? 1;
         await _audio.playSentence(index);
-
       }
     } catch (e) {
       debugPrint('⚠️ AudioTrigger failed: $e');

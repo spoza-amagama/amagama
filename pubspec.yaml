@@ -42,6 +42,7 @@ dev_dependencies:
     sdk: flutter
   lints: ^6.0.0
 
+  path: any
 scripts:
   rebuild: dart tools/rebuild_barrels.dart
   watch: dart tools/rebuild_barrels.dart --watch

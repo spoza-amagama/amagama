@@ -1,4 +1,4 @@
-// /lib/widgets/sparkle_layer.dart
+// 📄 lib/widgets/sparkle_layer.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
 
@@ -21,8 +21,8 @@ class SparkleLayerState extends State<SparkleLayer>
     final newSparkles = List.generate(6, (_) {
       final duration = 1000 + _rand.nextInt(500);
       return _Sparkle(
-        x: (_rand.nextDouble() * 2 - 1) * 60, // horizontal ±60px
-        y: (_rand.nextDouble() * 2 - 1) * 20, // vertical ±20px
+        x: (_rand.nextDouble() * 2 - 1) * 60,
+        y: (_rand.nextDouble() * 2 - 1) * 20,
         size: 10 + _rand.nextDouble() * 10,
         rotation: _rand.nextDouble() * pi,
         controller: AnimationController(
@@ -55,7 +55,7 @@ class SparkleLayerState extends State<SparkleLayer>
           builder: (context, _) {
             final progress = s.controller.value;
             final opacity = 1.0 - progress;
-            final offsetY = s.y - (progress * 25); // float upward
+            final offsetY = s.y - (progress * 25);
             final sparkleAlpha = 0.8 + 0.2 * _rand.nextDouble();
 
             return Positioned(
@@ -63,13 +63,11 @@ class SparkleLayerState extends State<SparkleLayer>
               top: offsetY,
               child: Transform.rotate(
                 angle: s.rotation + progress * pi / 4,
-                child: Opacity(
-                  opacity: opacity,
-                  child: Icon(
-                    Icons.star_rounded,
-                    color: _colorWithAlpha(Colors.amber.shade300, sparkleAlpha),
-                    size: s.size,
-                  ),
+                child: Icon(
+                  Icons.star_rounded,
+                  color: Colors.amber.shade300
+                      .withValues(alpha: opacity * sparkleAlpha),
+                  size: s.size,
                 ),
               ),
             );
@@ -77,18 +75,6 @@ class SparkleLayerState extends State<SparkleLayer>
         );
       }).toList(),
     );
-  }
-
-  /// 🧩 Helper: safely apply alpha depending on Flutter SDK
-  Color _colorWithAlpha(Color base, double alpha) {
-    try {
-      // For Flutter 3.22+ (new API)
-      // ignore: deprecated_member_use
-      return base.withValues(alpha: alpha);
-    } catch (_) {
-      // For older Flutter SDKs
-      return base.withOpacity(alpha);
-    }
   }
 
   @override

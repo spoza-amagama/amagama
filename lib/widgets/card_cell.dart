@@ -1,15 +1,13 @@
 // 📄 lib/widgets/card_cell.dart
 //
-// 💡 CardCell
-// ----------------------
-// Purely visual wrapper that displays one [RoundCard] inside
-// an animated glow or match highlight. This widget does not
-// contain game or audio logic — it only responds to visual state
-// updates from the [CardGridController].
-
+// 🧩 CardCell — visual wrapper for grid card instances.
+// Delegates flip and match handling to CardGridController.
+//
 import 'package:flutter/material.dart';
 import 'package:amagama/models/card_item.dart';
-import 'package:amagama/widgets/round_card.dart';
+import 'package:amagama/widgets/play/match_card_item.dart';
+import 'package:amagama/services/audio/audio_service.dart';
+import 'package:amagama/widgets/sparkle_layer.dart';
 
 class CardCell extends StatelessWidget {
   final CardItem item;
@@ -17,7 +15,7 @@ class CardCell extends StatelessWidget {
   final bool isGlowing;
   final double size;
   final bool lockInput;
-  final Future<void> Function() onFlip;
+  final VoidCallback onFlip;
 
   const CardCell({
     super.key,
@@ -25,40 +23,29 @@ class CardCell extends StatelessWidget {
     required this.isMatched,
     required this.isGlowing,
     required this.size,
+    required this.lockInput,
     required this.onFlip,
-    this.lockInput = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final List<BoxShadow> shadows = [
-      if (isMatched)
-        BoxShadow(
-          color: Colors.green.withValues(alpha: 0.6),
-          blurRadius: 12,
-          spreadRadius: 2,
-        ),
-      if (isGlowing)
-        BoxShadow(
-          color: Colors.amber.withValues(alpha: 0.6),
-          blurRadius: 10,
-          spreadRadius: 1,
-        ),
-    ];
+    final sparkleKey = GlobalKey<SparkleLayerState>();
 
-    return AnimatedScale(
-      scale: isMatched ? 1.05 : 1.0,
-      duration: const Duration(milliseconds: 200),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        decoration: BoxDecoration(boxShadow: shadows),
-        child: Center(
-          child: RoundCard(
-            item: item,
-            lockInput: lockInput,
-            onFlip: onFlip,
-            size: size,
-            avatarScale: 0.8,
+    return AnimatedOpacity(
+      opacity: isMatched ? 0.4 : 1.0,
+      duration: const Duration(milliseconds: 250),
+      child: AnimatedScale(
+        scale: isGlowing ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        child: IgnorePointer(
+          ignoring: lockInput || isMatched,
+          child: MatchCardItem(
+            card: item,
+            fadeOut: isMatched,
+            sparkleKey: sparkleKey,
+            audioService: AudioService(),
+            onWord: (_) {},
+            onComplete: (_) => onFlip(),
           ),
         ),
       ),

@@ -1,6 +1,6 @@
 // lib/state/audio_controller_provider.dart
 import 'package:flutter/material.dart';
-import 'package:amagama/services/audio_service.dart';
+import 'package:amagama/services/audio/audio_service.dart';
 
 class AudioControllerProvider extends ChangeNotifier {
   final AudioService _audio = AudioService();

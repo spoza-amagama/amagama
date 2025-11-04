@@ -1,38 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../state/index.dart';
-import '../widgets/home/home_app_bar.dart';
-import '../widgets/home/home_background.dart';
-import '../widgets/home/home_content.dart';
-import '../widgets/home/reset_dialog.dart';
+import 'package:amagama/widgets/home/home_background.dart' as bg;
+import 'package:amagama/widgets/home/home_app_bar.dart';
+import 'package:amagama/widgets/home/home_content.dart';
 
+/// 🏡 HomeScreen — orchestrates the full home view stack.
+/// ------------------------------------------------------------
+/// • Animated gradient background
+/// • Centered responsive app bar
+/// • Scrollable main content
+/// • Single, clean build() function
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final game = context.watch<GameController>();
-
     return Scaffold(
-      appBar: HomeAppBar(onReset: () => _showResetDialog(context, game)),
-      body: const HomeBackground(
-        child: SafeArea(child: HomeContent()),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      appBar: const HomeAppBar(), // ✅ now responsive & minimal
+      body: SafeArea(
+        child: Stack(
+          alignment: Alignment.topCenter,
+          children: const [
+            // 🌈 Animated gradient background
+            bg.HomeBackground(),
+
+            // 🧩 Main content (header + carousel + buttons)
+            HomeContent(),
+          ],
+        ),
       ),
     );
-  }
-
-  Future<void> _showResetDialog(BuildContext context, GameController game) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => const ResetDialog(),
-    );
-    if (ok == true) {
-      await game.resetAll();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Game reset.')),
-        );
-      }
-    }
   }
 }

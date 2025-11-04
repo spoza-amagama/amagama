@@ -1,6 +1,6 @@
 // lib/widgets/play_audio_manager.dart
 import 'package:flutter/material.dart';
-import 'package:amagama/services/audio_service.dart';
+import 'package:amagama/services/audio/audio_service.dart';
 
 /// Centralized widget for managing queued audio playback.
 /// Ensures word and sentence sounds do not overlap.

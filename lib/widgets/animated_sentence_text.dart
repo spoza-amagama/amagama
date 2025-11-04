@@ -34,19 +34,19 @@ class AnimatedSentenceText extends StatelessWidget {
             text,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 24,
-                  color: colorAnim.value,
-                  letterSpacing: 0.6,
-                  height: 1.4,
-                  shadows: const [
-                    Shadow(
-                      blurRadius: 3,
-                      color: Colors.black26,
-                      offset: Offset(1, 1),
-                    ),
-                  ],
+              fontWeight: FontWeight.w900,
+              fontSize: 24,
+              color: colorAnim.value,
+              letterSpacing: 0.6,
+              height: 1.4,
+              shadows: const [
+                Shadow(
+                  blurRadius: 3,
+                  color: Colors.black26,
+                  offset: Offset(1, 1),
                 ),
+              ],
+            ),
           ),
         );
       },

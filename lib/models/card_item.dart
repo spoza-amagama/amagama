@@ -1,45 +1,43 @@
-// lib/models/card_item.dart
+// 📄 lib/models/card_item.dart
+//
+// 🧩 CardItem
+// ------------------------------------------------------------
+// Represents a single card used in Amagama’s matching game.
+//
+// RESPONSIBILITIES
+// • Stores each card’s unique [id], [word], and flip/match state.
+// • Provides equality by ID to maintain widget stability.
+// • Mutable properties [isFaceUp] and [isMatched] control UI state.
+//
+// RELATED CLASSES
+// • [DeckBuilder] — creates CardItems for each sentence.
+// • [MatchFlipCard] — visual representation.
+// • [GameController] — manages card flipping and matching.
+//
+
 class CardItem {
   final int id;
   final String word;
-  final String? avatarPath;
-
-  bool isMatched;
   bool isFaceUp;
-
-  // Animation flags used by round_card.dart and game_controller.dart
-  bool shouldJump;
-  bool shouldShake;
-  bool shouldFlashRed;
+  bool isMatched;
 
   CardItem({
     required this.id,
     required this.word,
-    this.avatarPath,
-    this.isMatched = false,
     this.isFaceUp = false,
-    this.shouldJump = false,
-    this.shouldShake = false,
-    this.shouldFlashRed = false,
+    this.isMatched = false,
   });
 
-  // Copy utility (optional)
-  CardItem copyWith({
-    bool? isMatched,
-    bool? isFaceUp,
-    bool? shouldJump,
-    bool? shouldShake,
-    bool? shouldFlashRed,
-  }) {
-    return CardItem(
-      id: id,
-      word: word,
-      avatarPath: avatarPath,
-      isMatched: isMatched ?? this.isMatched,
-      isFaceUp: isFaceUp ?? this.isFaceUp,
-      shouldJump: shouldJump ?? this.shouldJump,
-      shouldShake: shouldShake ?? this.shouldShake,
-      shouldFlashRed: shouldFlashRed ?? this.shouldFlashRed,
-    );
-  }
+  // --- Legacy property stubs for transition ---
+  bool get shouldFlashRed => false;
+  bool get shouldShake => false;
+  String get avatarPath => 'assets/images/${word.toLowerCase()}.png';
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CardItem && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

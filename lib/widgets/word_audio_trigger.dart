@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:amagama/services/audio_service.dart';
+import 'package:amagama/services/audio/audio_service.dart';
 
 class WordAudioTrigger extends StatefulWidget {
   final String word;
@@ -21,7 +21,9 @@ class _WordAudioTriggerState extends State<WordAudioTrigger> {
   @override
   void didUpdateWidget(covariant WordAudioTrigger oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.play && widget.word.isNotEmpty && widget.word != oldWidget.word) {
+    if (widget.play &&
+        widget.word.isNotEmpty &&
+        widget.word != oldWidget.word) {
       final cleanWord = widget.word.split('_').first; // remove timestamp suffix
       _audio.playWord(cleanWord);
     }

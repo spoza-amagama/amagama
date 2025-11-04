@@ -39,7 +39,9 @@ class SentenceCarousel extends StatelessWidget {
                 color: unlocked ? Colors.white : Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isCurrent ? Theme.of(context).colorScheme.secondary : Colors.black12,
+                  color: isCurrent
+                      ? Theme.of(context).colorScheme.secondary
+                      : Colors.black12,
                   width: isCurrent ? 3 : 1.5,
                 ),
               ),
@@ -48,17 +50,22 @@ class SentenceCarousel extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(unlocked ? Icons.lock_open_rounded : Icons.lock_rounded,
+                      Icon(
+                          unlocked
+                              ? Icons.lock_open_rounded
+                              : Icons.lock_rounded,
                           color: unlocked ? Colors.green : Colors.black54),
                       const SizedBox(width: 8),
-                      Text("Sentence ${i+1}",
+                      Text("Sentence ${i + 1}",
                           style: Theme.of(context).textTheme.titleMedium),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Expanded(
                     child: Text(
-                      unlocked ? sentenceText(i) : "Locked — finish your cycles!",
+                      unlocked
+                          ? sentenceText(i)
+                          : "Locked — finish your cycles!",
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium,

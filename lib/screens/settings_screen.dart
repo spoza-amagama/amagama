@@ -1,7 +1,18 @@
-// /lib/screens/settings_screen.dart
+// 📄 lib/screens/settings_screen.dart
+//
+// ⚙️ SettingsScreen
+// ------------------------------------------------------------
+// Manages app configuration and game reset.
+//
+// RESPONSIBILITIES
+// • Adjusts cycle targets.
+// • Resets all saved progress.
+// • Reloads the GameController after changes.
+//
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../state/index.dart';
+import '../state/game_controller.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -11,153 +22,50 @@ class SettingsScreen extends StatelessWidget {
     final game = context.watch<GameController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Grown-Ups'),
-        backgroundColor: const Color(0xFFFFC107),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFFFF8E1), Color(0xFFFFECB3)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+      appBar: AppBar(title: const Text('Settings')),
+      body: Padding(
         padding: const EdgeInsets.all(16),
-        child: ListView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 10),
-            Text(
-              'Game Settings',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown.shade700,
-                  ),
+            Text('Cycles per sentence',
+                style: Theme.of(context).textTheme.titleMedium),
+            Slider(
+              value: game.cyclesTarget.toDouble(),
+              min: 1,
+              max: 6,
+              divisions: 5,
+              label: '${game.cyclesTarget}',
+              onChanged: (v) async {
+                // Reload game with new cycle target
+                game.setCyclesTarget(v.toInt());
+              },
             ),
-            const SizedBox(height: 8),
-
-            // 🧩 Adjust cycles target
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Cycles per sentence:',
-                        style: TextStyle(fontSize: 16),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.restart_alt_rounded),
+              label: const Text('Reset All Progress'),
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Reset All Progress?'),
+                    content: const Text(
+                        'This will erase your trophies and sentence progress.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
                       ),
-                    ),
-                    DropdownButton<int>(
-                      value: game.cyclesTarget,
-                      items: List.generate(6, (i) {
-                        final value = i + 1;
-                        return DropdownMenuItem<int>(
-                          value: value,
-                          child: Text('$value'),
-                        );
-                      }),
-                      onChanged: (v) {
-                        if (v != null) {
-                          game.setCyclesTarget(v);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            Text(
-              'Maintenance',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown.shade700,
-                  ),
-            ),
-            const SizedBox(height: 8),
-
-            // 🧹 Reset game card
-            Card(
-              color: Colors.red.shade50,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: ListTile(
-                leading: const Icon(Icons.refresh_rounded,
-                    color: Colors.redAccent),
-                title: const Text(
-                  'Reset Game Progress',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: const Text(
-                  'Erase all progress, trophies, and unlocks.',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 16, color: Colors.redAccent),
-                onTap: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Reset everything?'),
-                      content: const Text(
-                        'This will erase all progress, trophies, and locks. This action cannot be undone.',
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Reset'),
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                          ),
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Reset'),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (confirm == true) {
-                    await game.resetAll();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Game has been reset.'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                    }
-                  }
-                },
-              ),
-            ),
-
-            const SizedBox(height: 30),
-            Text(
-              'About',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown.shade700,
+                    ],
                   ),
-            ),
-            const SizedBox(height: 8),
-
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const ListTile(
-                leading: Icon(Icons.info_outline_rounded, color: Colors.brown),
-                title: Text('Amagama Learning App'),
-                subtitle: Text('Helping kids learn words with fun and play!'),
-              ),
+                );
+                if (confirm == true) await game.resetAll();
+              },
             ),
           ],
         ),

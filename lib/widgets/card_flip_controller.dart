@@ -1,18 +1,17 @@
 // 📄 lib/widgets/card_flip_controller.dart
 //
 // 🎮 CardFlipController
-// ----------------------
-// A lightweight bridge between [RoundCard] (UI) and the game logic.
-// Delegates flipping, matching, and audio sequencing to
-// [CardGridController] and [GameController].
-
+// ------------------------------------------------------------
+// Bridges the game controller logic and visual flip-card presentation.
+//
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:amagama/controllers/card_grid_controller.dart';
 import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/data/index.dart';
 import 'package:amagama/models/card_item.dart';
-import 'package:amagama/widgets/round_card.dart';
+import 'package:amagama/widgets/play/match_card_item.dart';
+import 'package:amagama/services/audio/audio_service.dart';
+import 'package:amagama/widgets/sparkle_layer.dart';
 
 class CardFlipController extends StatelessWidget {
   final CardItem item;
@@ -26,29 +25,25 @@ class CardFlipController extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gridCtrl = context.read<CardGridController>();
     final game = context.watch<GameController>();
     final sentence = sentences[game.currentSentenceIndex];
+    final sparkleKey = GlobalKey<SparkleLayerState>();
 
-    final bool isMatched = gridCtrl.isMatched(item.id);
-    final bool isGlowing = gridCtrl.isGlowing(item.id);
-
-    return RoundCard(
-      item: item,
-      size: size,
-      avatarScale: 0.8,
-      lockInput: game.busy,
-      onFlip: () async {
-        // 🂠 Flip logic handled by the controller
-        await gridCtrl.handleFlip(context, item, sentence.id);
-
-        // 🧠 Notify on word flip (if still unmatched)
-        if (!item.isMatched && item.isFaceUp) {
-          debugPrint("🔊 Word flipped: ${item.word}");
-        }
-
-        // 🏁 When all cards are matched, sentence audio will be played automatically
-      },
+    return SizedBox(
+      width: size,
+      height: size,
+      child: MatchCardItem(
+        card: item,
+        fadeOut: item.isMatched,
+        sparkleKey: sparkleKey,
+        audioService: AudioService(),
+        onWord: (_) {},
+        onComplete: (_) async {
+          if (game.deck.every((c) => c.isMatched)) {
+            await AudioService().playSentence(sentence.id);
+          }
+        },
+      ),
     );
   }
 }

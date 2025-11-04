@@ -1,226 +1,204 @@
-// 📄 lib/widgets/round_card.dart
-//
-// 🌀 RoundCard
-// ----------------------
-// Purely visual, animated card widget used in the play grid.
-// Handles flip, pulse, and shake animations for game cards.
-// All game logic, audio, and state are handled externally
-// by [CardFlipController] and [CardGridController].
-
-import 'dart:math' as math;
+// 📄 lib/widgets/play/match_card_item.dart
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:amagama/models/card_item.dart';
+import 'package:amagama/services/audio/audio_service.dart';
+import 'package:amagama/widgets/sparkle_layer.dart';
+import 'package:amagama/state/game_controller.dart';
+import 'package:provider/provider.dart';
+import 'package:amagama/utils/avatar_registry.dart';
 
-class RoundCard extends StatefulWidget {
-  final CardItem item;
-  final bool lockInput;
-  final Future<void> Function() onFlip;
-  final double size;
-  final double avatarScale;
+/// 🎴 MatchCardItem — round flip-card with avatar and word reveal animation.
+class MatchCardItem extends StatefulWidget {
+  final CardItem card;
+  final bool fadeOut;
+  final GlobalKey<SparkleLayerState>? sparkleKey;
+  final AudioService audioService;
+  final ValueChanged<String> onWord;
+  final ValueChanged<String> onComplete;
 
-  const RoundCard({
+  const MatchCardItem({
     super.key,
-    required this.item,
-    required this.lockInput,
-    required this.onFlip,
-    this.size = 120,
-    this.avatarScale = 0.8,
+    required this.card,
+    required this.fadeOut,
+    required this.sparkleKey,
+    required this.audioService,
+    required this.onWord,
+    required this.onComplete,
   });
 
   @override
-  State<RoundCard> createState() => _RoundCardState();
+  State<MatchCardItem> createState() => _MatchCardItemState();
 }
 
-class _RoundCardState extends State<RoundCard> with TickerProviderStateMixin {
-  bool _isFlipped = false;
-  bool _hasPulsed = false;
-
-  late final AnimationController _flipCtrl;
-  late final AnimationController _pulseCtrl;
-  late final Animation<double> _flipAnim;
-  late final Animation<double> _pulseAnim;
+class _MatchCardItemState extends State<MatchCardItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _flipController;
+  bool _isFront = true;
+  bool _isFlipping = false;
 
   @override
   void initState() {
     super.initState();
-
-    _flipCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    );
-
-    _flipAnim = Tween<double>(begin: 0, end: math.pi).animate(
-      CurvedAnimation(parent: _flipCtrl, curve: Curves.easeInOut),
-    );
-
-    _pulseCtrl = AnimationController(
+    _flipController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
-      lowerBound: 0.0,
-      upperBound: 0.1,
     );
-
-    _pulseAnim = CurvedAnimation(
-      parent: _pulseCtrl,
-      curve: Curves.easeOut,
-    );
-  }
-
-  @override
-  void didUpdateWidget(RoundCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // 🔁 Flip animation sync
-    if (widget.item.isFaceUp != _isFlipped) {
-      if (widget.item.isFaceUp) {
-        _flipCtrl.forward();
-      } else {
-        _flipCtrl.reverse();
-      }
-      _isFlipped = widget.item.isFaceUp;
-    }
-
-    // 💚 Pulse when matched for first time
-    if (widget.item.isMatched && !_hasPulsed) {
-      _pulseCtrl.forward(from: 0);
-      _hasPulsed = true;
-    }
   }
 
   @override
   void dispose() {
-    _flipCtrl.dispose();
-    _pulseCtrl.dispose();
+    _flipController.dispose();
     super.dispose();
   }
 
   Future<void> _handleTap() async {
-    if (widget.lockInput || widget.item.isMatched) return;
-    await widget.onFlip();
+    if (_isFlipping) return;
+    setState(() => _isFlipping = true);
+
+    final game = context.read<GameController>();
+    final result = await game.onCardTapped(widget.card);
+
+    // Start flip animation
+    await _flipController.forward();
+    setState(() => _isFront = !_isFront);
+    await _flipController.reverse();
+
+    if (result == CardMatchResult.matched) {
+      // ✅ Safe sequence: audio + sparkle + callbacks
+      await widget.audioService.playWord(widget.card.word);
+      widget.onWord(widget.card.word);
+      widget.onComplete(widget.card.word);
+
+      // ✅ Safe null-checked sparkle trigger
+      final sparkleState = widget.sparkleKey?.currentState;
+      sparkleState?.triggerSparkles();
+    }
+
+    setState(() => _isFlipping = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = widget.item.isMatched
-        ? Colors.green.shade600
-        : Colors.yellow.shade200;
+    final card = widget.card;
+    final isFading = widget.fadeOut && card.isMatched;
+    final avatarAsset = AvatarRegistry.instance.avatarFor(card.id.toString());
 
-    final textColor = widget.item.isMatched
-        ? Colors.white
-        : Colors.black.withValues(alpha: 0.85);
+    return AnimatedOpacity(
+      opacity: isFading ? 0.25 : 1.0,
+      duration: const Duration(milliseconds: 250),
+      child: GestureDetector(
+        onTap: _handleTap,
+        child: AnimatedBuilder(
+          animation: _flipController,
+          builder: (context, child) {
+            final angle = _flipController.value * pi;
+            final isFrontVisible = angle <= pi / 2;
+            final transform = Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..rotateY(angle);
 
-    final isFlashingRed = widget.item.shouldFlashRed;
-    final isShaking = widget.item.shouldShake;
+            return Transform(
+              transform: transform,
+              alignment: Alignment.center,
+              child: isFrontVisible
+                  ? _buildFront(avatarAsset)
+                  : _buildBack(card.word, card.isMatched),
+            );
+          },
+        ),
+      ),
+    );
+  }
 
-    return GestureDetector(
-      onTap: _handleTap,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_flipCtrl, _pulseCtrl]),
-        builder: (context, _) {
-          final isFront = _flipAnim.value < math.pi / 2;
-          final shakeOffset = isShaking
-              ? math.sin(DateTime.now().millisecondsSinceEpoch * 0.05) * 6
-              : 0.0;
-          final scale = 1 + _pulseAnim.value;
+  /// 🟣 Back of card — shows avatar (unmatched state)
+  Widget _buildFront(String avatarAsset) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final diameter = constraints.biggest.shortestSide;
+        final avatarSize = diameter * 0.8;
 
-          return Transform.translate(
-            offset: Offset(shakeOffset, 0),
-            child: Transform.scale(
-              scale: scale,
-              child: Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001)
-                  ..rotateY(_flipAnim.value),
-                child: Container(
-                  width: widget.size,
-                  height: widget.size,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: baseColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        offset: const Offset(2, 2),
-                        blurRadius: 4,
-                      ),
-                    ],
+        return Container(
+          width: diameter,
+          height: diameter,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: Colors.grey.shade300,
+              width: 2,
+            ),
+          ),
+          child: Center(
+            child: Image.asset(
+              avatarAsset,
+              width: avatarSize,
+              height: avatarSize,
+              fit: BoxFit.contain,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// 🟢 Front of card — revealed word
+  Widget _buildBack(String word, bool isMatched) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final diameter = constraints.biggest.shortestSide;
+        final bgColor = isMatched ? Colors.green.shade100 : Colors.red.shade100;
+
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: diameter,
+              height: diameter,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: bgColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: isMatched
+                        ? Colors.green.shade700.withValues(alpha: 0.3)
+                        : Colors.red.shade700.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // 🖼️ FRONT — avatar image
-                      IgnorePointer(
-                        ignoring: !isFront,
-                        child: Opacity(
-                          opacity: isFront ? 1 : 0,
-                          child: Padding(
-                            padding: EdgeInsets.all(widget.size * 0.15),
-                            child: ClipOval(
-                              child: Image.asset(
-                                widget.item.avatarPath ?? '',
-                                fit: BoxFit.contain,
-                                width: widget.size * widget.avatarScale,
-                                height: widget.size * widget.avatarScale,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // 🔤 BACK — text (word)
-                      IgnorePointer(
-                        ignoring: isFront,
-                        child: Opacity(
-                          opacity: isFront ? 0 : 1,
-                          child: Transform(
-                            alignment: Alignment.center,
-                            transform: Matrix4.identity()..rotateY(math.pi),
-                            child: ClipOval(
-                              child: Container(
-                                color: Colors.transparent,
-                                alignment: Alignment.center,
-                                child: Text(
-                                  widget.item.word,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: textColor,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: widget.size * 0.22,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withValues(alpha: 0.25),
-                                        offset: const Offset(1, 1),
-                                        blurRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // 🔴 FLASH overlay for mismatched attempt
-                      AnimatedOpacity(
-                        opacity: isFlashingRed ? 1 : 0,
-                        duration: const Duration(milliseconds: 120),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.redAccent.withValues(alpha: 0.6),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                ],
+                border: Border.all(
+                  color: isMatched
+                      ? Colors.green.shade700
+                      : Colors.red.shade400,
+                  width: 2,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                word,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isMatched
+                      ? Colors.green.shade800
+                      : Colors.red.shade800,
                 ),
               ),
             ),
-          );
-        },
-      ),
+            if (isMatched && widget.sparkleKey != null)
+              SparkleLayer(key: widget.sparkleKey!),
+          ],
+        );
+      },
     );
   }
 }

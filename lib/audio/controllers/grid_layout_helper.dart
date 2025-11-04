@@ -2,7 +2,7 @@
 //
 // 🧮 GridLayoutHelper
 // ----------------------
-// Provides a single, pure function [computeGridLayout] that calculates
+// Provides a single, pure function [computeLayout] that calculates
 // the optimal number of columns, rows, and card sizes for the play grid
 // based on available screen dimensions and total cards.
 // Used by [CardGrid] to maintain consistent, adaptive layout.
@@ -28,11 +28,11 @@ class GridLayout {
 }
 
 /// Calculates best-fit layout for card grid.
-/// 
+///
 /// - Dynamically adapts to screen width/height.
 /// - Ensures cards are evenly spaced and centered vertically.
 /// - Returns a [GridLayout] object with layout data.
-GridLayout computeGridLayout({
+GridLayout computeLayout({
   required Size boxSize,
   required int totalCards,
 }) {
@@ -59,8 +59,9 @@ GridLayout computeGridLayout({
     final availableHeight = height - totalVSpacing - 16;
     if (availableWidth <= 0 || availableHeight <= 0) continue;
 
-    final size =
-        math.min(availableWidth / cols, availableHeight / rows).clamp(40.0, 160.0);
+    final size = math
+        .min(availableWidth / cols, availableHeight / rows)
+        .clamp(40.0, 160.0);
     if (cols * rows >= totalCards && size > bestCardSize) {
       bestCardSize = size;
       bestCols = cols;
@@ -68,8 +69,7 @@ GridLayout computeGridLayout({
     }
   }
 
-  final usedHeight =
-      bestRows * bestCardSize + (bestRows - 1) * baseSpacing;
+  final usedHeight = bestRows * bestCardSize + (bestRows - 1) * baseSpacing;
   final topPadding = ((height - usedHeight) / 2).clamp(0.0, double.infinity);
 
   return GridLayout(

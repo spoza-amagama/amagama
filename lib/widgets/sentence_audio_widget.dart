@@ -1,6 +1,6 @@
 // lib/widgets/sentence_audio_widget.dart
 import 'package:flutter/material.dart';
-import 'package:amagama/services/audio_service.dart';
+import 'package:amagama/services/audio/audio_service.dart';
 
 /// Handles automatic sentence playback when `playOnMatch` toggles true.
 class SentenceAudioWidget extends StatefulWidget {

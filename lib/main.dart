@@ -1,13 +1,16 @@
 // 📄 lib/main.dart
-// Entry point for the Amagama app.
+// ------------------------------------------------------------
+// 🎮 Amagama — Entry Point
 // Initializes game state, audio controller, and global providers.
+// Defines routes for / (Home) and /play (Game).
+// ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'state/index.dart';
 import 'screens/index.dart';
 import 'theme/theme.dart';
-import 'services/audio_service.dart';
+import 'services/audio/audio_service.dart';
 import 'controllers/card_grid_controller.dart';
 
 void main() async {
@@ -39,12 +42,18 @@ class AmagamaApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Amagama',
         theme: buildTheme(),
-        home: const LoadingWrapper(),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => const LoadingWrapper(),
+          '/home': (context) => const HomeScreen(),
+          '/play': (context) => const PlayScreen(),
+        },
       ),
     );
   }
 }
 
+/// 🕹️ Waits for game state to initialize before showing home screen
 class LoadingWrapper extends StatelessWidget {
   const LoadingWrapper({super.key});
 

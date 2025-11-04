@@ -14,15 +14,14 @@ class SentenceProgress {
   });
 
   factory SentenceProgress.fromJson(Map<String, dynamic> json) {
-  return SentenceProgress(
-    sentenceId: json['sentenceId'] as int? ?? 0,
-    cyclesCompleted: json['cyclesCompleted'] as int? ?? 0,
-    trophyBronze: json['trophyBronze'] as bool? ?? false,
-    trophySilver: json['trophySilver'] as bool? ?? false,
-    trophyGold: json['trophyGold'] as bool? ?? false,
-  );
-}
-
+    return SentenceProgress(
+      sentenceId: json['sentenceId'] as int? ?? 0,
+      cyclesCompleted: json['cyclesCompleted'] as int? ?? 0,
+      trophyBronze: json['trophyBronze'] as bool? ?? false,
+      trophySilver: json['trophySilver'] as bool? ?? false,
+      trophyGold: json['trophyGold'] as bool? ?? false,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'sentenceId': sentenceId,
@@ -31,6 +30,7 @@ class SentenceProgress {
         'trophySilver': trophySilver,
         'trophyGold': trophyGold,
       };
+
   /// 🧩 Add this method so GameController can update progress safely
   SentenceProgress copyWith({
     int? sentenceId,
@@ -45,6 +45,6 @@ class SentenceProgress {
       trophyBronze: trophyBronze ?? this.trophyBronze,
       trophySilver: trophySilver ?? this.trophySilver,
       trophyGold: trophyGold ?? this.trophyGold,
-    );    
-}
+    );
+  }
 }
