@@ -1,6 +1,5 @@
 // 📄 lib/widgets/play/play_body.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/widgets/play/animated_match_grid.dart';
 import 'package:amagama/services/audio/audio_service.dart';
@@ -9,6 +8,7 @@ import 'package:amagama/services/audio/audio_service.dart';
 class PlayBody extends StatelessWidget {
   final bool fadeOut;
   final AudioService audioService;
+  final GameController? game; // 👈 make optional
   final ValueChanged<String> onWord;
   final ValueChanged<String> onComplete;
 
@@ -16,14 +16,19 @@ class PlayBody extends StatelessWidget {
     super.key,
     required this.fadeOut,
     required this.audioService,
+    this.game, // 👈 optional fallback
     required this.onWord,
     required this.onComplete,
   });
 
   @override
   Widget build(BuildContext context) {
-    final game = context.watch<GameController>();
-    final cards = game.deck; // ✅ use the active deck, not Sentence.cards
+    final g = game; // local alias for safety
+    if (g == null) {
+      return const Center(child: Text('Game not initialized'));
+    }
+
+    final cards = g.deck;
 
     if (cards.isEmpty) {
       return const Center(
@@ -35,8 +40,8 @@ class PlayBody extends StatelessWidget {
     }
 
     return AnimatedMatchGrid(
-      sentenceId: game.currentSentenceIndex,
-      cards: game.deck,
+      sentenceId: g.currentSentenceIndex,
+      cards: g.deck,
     );
   }
 }

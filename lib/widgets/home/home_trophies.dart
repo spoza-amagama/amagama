@@ -1,16 +1,13 @@
-// 📄 lib/widgets/home/home_trophies.dart
-//
-// 🏆 HomeTrophies — visual indicator of progress and earned trophies.
-// ------------------------------------------------------------
-// Displays three trophy chips (bronze, silver, gold) plus an animated
-// progress bar showing how many cycles have been completed for the
-// current sentence.
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/widgets/home/trophy_chip.dart';
 
+/// 🏆 HomeTrophies — visual indicator of progress and earned trophies.
+/// ------------------------------------------------------------
+/// Displays three trophy chips (bronze, silver, gold) plus an animated
+/// progress bar showing how many cycles have been completed for the
+/// current sentence (no duplicate text line).
 class HomeTrophies extends StatelessWidget {
   const HomeTrophies({super.key});
 
@@ -50,36 +47,25 @@ class HomeTrophies extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
 
-        // 📊 Animated progress bar
+        // 📊 Animated progress bar only (no text)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: progress),
-                duration: const Duration(milliseconds: 600),
-                curve: Curves.easeInOutCubic,
-                builder: (context, value, _) => LinearProgressIndicator(
-                  value: value,
-                  backgroundColor: Colors.grey.shade300,
-                  color: Colors.orangeAccent.shade400,
-                  minHeight: 8,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Cycles: $cyclesDone / $totalCycles',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.brown.shade700,
-                    ),
-              ),
-            ],
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: progress),
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeInOutCubic,
+            builder: (context, value, _) => LinearProgressIndicator(
+              value: value,
+              backgroundColor: Colors.grey.shade300,
+              color: Colors.orangeAccent.shade400,
+              minHeight: 8,
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         ),
+        const SizedBox(height: 6),
       ],
     );
   }

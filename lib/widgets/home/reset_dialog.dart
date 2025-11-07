@@ -45,8 +45,8 @@ class _ResetDialogState extends State<ResetDialog> {
         .length;
 
     return AlertDialog(
-      title: Row(
-        children: const [
+      title: const Row(
+        children: [
           Icon(Icons.lock, color: Colors.red, size: 26),
           SizedBox(width: 8),
           Text('Grown Ups Only'),

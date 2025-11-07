@@ -4,7 +4,7 @@ import '../../state/game_controller.dart';
 import '../../data/index.dart';
 import 'home_header.dart';
 import 'home_carousel.dart';
-import 'reset_dialog.dart';
+import 'grownup_pin_dialog.dart'; // ✅ PIN dialog
 
 class HomeContent extends StatelessWidget {
   const HomeContent({super.key});
@@ -29,7 +29,7 @@ class HomeContent extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // 🧠 Header section
+                // 🧠 Header + info
                 Column(
                   children: [
                     HomeHeader(
@@ -46,7 +46,7 @@ class HomeContent extends StatelessWidget {
                             fontSize: 14,
                           ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       'Sentence $currentSentence of $totalSentences',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -55,60 +55,85 @@ class HomeContent extends StatelessWidget {
                             fontSize: 13,
                           ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Divider(
                       color: Colors.brown.shade200,
                       thickness: 1,
                       indent: 40,
                       endIndent: 40,
-                      height: 16,
+                      height: 12,
                     ),
                   ],
                 ),
 
-                // 🪶 Scrollable carousel
-                Expanded(
+                // 🪶 Expanded carousel — takes more height now
+                const Expanded(
+                  flex: 6, // increased from 4 → 6
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: HomeCarousel(),
+                    padding: EdgeInsets.symmetric(vertical: 6.0),
+                    child: ClipRect(
+                      child: HomeCarousel(),
+                    ),
                   ),
                 ),
 
-                // 🧩 Bottom button area
+                // 🧩 Compact bottom buttons
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8.0, top: 4.0),
                   child: Column(
                     children: [
-                      // ▶️ Play button
+                      // ▶️ Play button (smaller)
                       ElevatedButton.icon(
-                        onPressed: () => Navigator.pushNamed(context, '/play'),
-                        icon: const Icon(Icons.play_arrow),
+                        onPressed: () =>
+                            Navigator.pushNamed(context, '/play'),
+                        icon: const Icon(Icons.play_arrow, size: 22),
                         label: const Text('Play'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade500,
-                          minimumSize: const Size(160, 48),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                          minimumSize: const Size(130, 42),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                       const SizedBox(height: 10),
 
-                      // 🔁 Grown Ups button only
+                      // 🔒 Grown Ups button (smaller)
                       OutlinedButton.icon(
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/grownups'),
-                        icon: const Icon(Icons.lock_outline),
+                        onPressed: () async {
+                          final allowed = await showDialog<bool>(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (_) => const GrownUpPinDialog(),
+                              ) ??
+                              false;
+
+                          if (allowed) {
+                            // ignore: use_build_context_synchronously
+                            Navigator.pushNamed(context, '/grownups');
+                          }
+                        },
+                        icon: const Icon(Icons.lock, size: 20),
                         label: const Text('Grown Ups'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.brown.shade800,
                           side: BorderSide(
-                            color: Colors.brown.shade400,
-                            width: 1.2,
-                          ),
-                          minimumSize: const Size(160, 46),
+                              color: Colors.brown.shade400, width: 1.1),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 26, vertical: 8),
+                          minimumSize: const Size(130, 42),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),

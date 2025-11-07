@@ -14,14 +14,14 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
-      appBar: const HomeAppBar(), // ✅ now responsive & minimal
+      appBar: HomeAppBar(), // ✅ now responsive & minimal
       body: SafeArea(
         child: Stack(
           alignment: Alignment.topCenter,
-          children: const [
+          children: [
             // 🌈 Animated gradient background
             bg.HomeBackground(),
 

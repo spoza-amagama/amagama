@@ -7,11 +7,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+// 🧠 State + Controllers
 import 'state/index.dart';
-import 'screens/index.dart';
-import 'theme/theme.dart';
-import 'services/audio/audio_service.dart';
 import 'controllers/card_grid_controller.dart';
+
+// 🎵 Services
+import 'services/audio/audio_service.dart';
+
+// 🖥️ Screens
+import 'screens/index.dart';
+
+// 🎨 Theme
+import 'theme/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
