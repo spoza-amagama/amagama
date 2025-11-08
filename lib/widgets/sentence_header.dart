@@ -1,10 +1,13 @@
-// lib/widgets/sentence_header.dart
-import 'package:flutter/material.dart';
-import 'animated_sentence_text.dart';
-import 'sparkle_layer.dart';
+// 📄 lib/widgets/sentence_header.dart
+//
+// 🪶 SentenceHeader (Responsive)
+// ------------------------------------------------------------
+// Displays "Your Sentence" title and one responsive sentence bubble.
+// Dynamically scales text size by sentence length and screen width.
 
-/// Combines animated sentence text and sparkles into one header component.
-class SentenceHeader extends StatefulWidget {
+import 'package:flutter/material.dart';
+
+class SentenceHeader extends StatelessWidget {
   final String text;
   final AnimationController controller;
 
@@ -14,40 +17,71 @@ class SentenceHeader extends StatefulWidget {
     required this.controller,
   });
 
-  @override
-  State<SentenceHeader> createState() => _SentenceHeaderState();
-}
+  double _dynamicFontSize(BuildContext context, String text) {
+    final width = MediaQuery.of(context).size.width;
+    final base = width < 380 ? 20.0 : width < 500 ? 24.0 : 28.0;
 
-class _SentenceHeaderState extends State<SentenceHeader> {
-  final GlobalKey<SparkleLayerState> _sparkleKey = GlobalKey();
-
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addStatusListener((status) {
-      if (status == AnimationStatus.forward) {
-        _sparkleKey.currentState?.triggerSparkles();
-      }
-    });
+    // Reduce font slightly for longer sentences
+    final lengthFactor = (text.length / 40).clamp(0.8, 1.3);
+    final scaled = base / lengthFactor;
+    return scaled.clamp(18.0, 34.0);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Center(
-        child: Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.none,
-          children: [
-            SparkleLayer(key: _sparkleKey),
-            AnimatedSentenceText(
-              text: widget.text,
-              controller: widget.controller,
+    final theme = Theme.of(context);
+    final isSmall = MediaQuery.of(context).size.height < 700;
+    final fontSize = _dynamicFontSize(context, text);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 🏷️ Title label
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Text(
+            'Your Sentence',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[900],
             ),
-          ],
+          ),
         ),
-      ),
+
+        // 💬 Sentence bubble (auto-sized)
+        Container(
+          margin: EdgeInsets.only(bottom: isSmall ? 8 : 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 6,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: AnimatedBuilder(
+            animation: controller,
+            builder: (context, _) {
+              return Transform.scale(
+                scale: 0.95 + (controller.value * 0.1),
+                child: Text(
+                  text,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: fontSize,
+                    height: 1.2,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

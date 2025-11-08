@@ -1,28 +1,19 @@
 // 📄 lib/widgets/play/animated_match_grid.dart
 //
-// 🎲 AnimatedMatchGrid
+// 🎲 AnimatedMatchGrid — adaptive grid with animation
 // ------------------------------------------------------------
-// Displays a responsive grid of [MatchFlipCard] widgets.
-// Integrates glow and matched highlights from [CardGridController].
-//
-// RESPONSIBILITIES
-// • Renders dynamic card grid layout per screen size.
-// • Delegates card flipping and audio playback to controller.
-// • Layers glow/match visual feedback over each card.
-//
-// DEPENDENCIES
-// • [CardGridController] — orchestrates flip/audio/match state.
-// • [CardGridGlow], [CardGridMatchedHighlight] — visual effects.
-// • [MatchFlipCard] — interactive card widget.
-//
+// • Displays all cards using adaptive grid layout.
+// • Handles only animation + rendering structure.
+// • Delegates layout math to [computeAdaptiveLayout].
+// • Delegates each card tile to [MatchCardTile].
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:amagama/models/card_item.dart';
+import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/controllers/card_grid_controller.dart';
-import 'package:amagama/widgets/play/match_flip_card.dart';
-import 'package:amagama/widgets/play/card_grid_glow.dart';
-import 'package:amagama/widgets/play/card_grid_matched_highlight.dart';
+import 'package:amagama/widgets/play/match_card_tile.dart';
+import 'package:amagama/utils/grid_layout_helper.dart';
 
 class AnimatedMatchGrid extends StatelessWidget {
   final List<CardItem> cards;
@@ -36,55 +27,62 @@ class AnimatedMatchGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Watch game state for rebuilds
+    context.watch<GameController>();
+    final controller = context.read<CardGridController>();
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final controller = context.watch<CardGridController>();
-        final layout = controller.computeGridLayout(
-          boxSize: Size(constraints.maxWidth, constraints.maxHeight),
-          totalCards: cards.length,
+        final layout = computeAdaptiveLayout(
+          size: Size(constraints.maxWidth, constraints.maxHeight),
+          total: cards.length,
+          isTablet: constraints.maxWidth > 700,
         );
 
-        return GridView.builder(
-          padding: EdgeInsets.only(top: layout.topPadding),
-          physics: layout.scrollable
-              ? const BouncingScrollPhysics()
-              : const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: layout.cols,
-            mainAxisSpacing: layout.spacing,
-            crossAxisSpacing: layout.spacing,
-            childAspectRatio: 1.0,
+        return AnimatedPadding(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          padding: EdgeInsets.only(
+            top: layout.topPad,
+            left: 8,
+            right: 8,
           ),
-          itemCount: cards.length,
-          itemBuilder: (context, i) {
-            final card = cards[i];
-            final isMatched = controller.isMatched(card.id);
-            final isGlowing = controller.isGlowing(card.id);
-            final sparkleKey = GlobalKey();
-
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                MatchFlipCard(
-                  key: ValueKey(card.id),
-                  card: card,
-                  sparkleKey: sparkleKey,
-                  onTap: () => controller.handleCardFlip(
-                    context: context,
-                    item: card,
-                    sentenceId: sentenceId,
-                    boxSize: Size(
-                      constraints.maxWidth,
-                      constraints.maxHeight,
-                    ),
-                    totalCards: cards.length,
-                  ),
+          child: AnimatedAlign(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: Alignment.center,
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: layout.spacing,
+                  runSpacing: layout.spacing,
+                  children: [
+                    for (final card in cards)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        width: layout.cardSize,
+                        height: layout.cardSize,
+                        child: MatchCardTile(
+                          card: card,
+                          controller: controller,
+                          sentenceId: sentenceId,
+                          totalCards: cards.length,
+                          gridSize: Size(
+                            constraints.maxWidth,
+                            constraints.maxHeight,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                CardGridGlow(active: isGlowing),
-                CardGridMatchedHighlight(visible: isMatched),
-              ],
-            );
-          },
+              ),
+            ),
+          ),
         );
       },
     );

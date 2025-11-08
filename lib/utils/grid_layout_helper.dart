@@ -1,87 +1,76 @@
-// 📂 lib/utils/grid_layout_helper.dart
+// 📄 lib/utils/grid_layout_helper.dart
+// ------------------------------------------------------------
+// 🧮 computeAdaptiveLayout
+// Pure function: returns card size/spacing/topPad/cols
+// for an adaptive single-screen centered grid (2–7 cols).
+// ------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 
-/// 🧮 GridLayoutHelper
-/// ------------------------------------------------------
-/// Calculates responsive grid layout parameters so that
-/// cards always fit neatly within one screen across phones
-/// and tablets, portrait or landscape.
 class GridLayout {
-  final int crossAxisCount;
-  final double aspectRatio;
-  final double cardWidth;
-  final double cardHeight;
+  final double cardSize;
   final double spacing;
-  final double padding;
-  final bool isTablet;
-  final bool isLandscape;
+  final double topPad;
+  final int cols;
 
   const GridLayout({
-    required this.crossAxisCount,
-    required this.aspectRatio,
-    required this.cardWidth,
-    required this.cardHeight,
-    required this.isTablet,
-    required this.isLandscape,
-    this.spacing = 12.0,
-    this.padding = 16.0,
+    required this.cardSize,
+    required this.spacing,
+    required this.topPad,
+    required this.cols,
   });
 }
 
-class GridLayoutHelper {
-  /// Calculates layout for a given screen and number of cards.
-  static GridLayout calculate(BuildContext context, int totalCards) {
-    final size = MediaQuery.of(context).size;
-    final orientation = MediaQuery.of(context).orientation;
+GridLayout computeAdaptiveLayout({
+  required Size size,
+  required int total,
+  required bool isTablet,
+}) {
+  final w = size.width;
+  final h = size.height;
 
-    final isLandscape = orientation == Orientation.landscape;
-    final isTablet = _isTablet(size);
+  final spacing = isTablet
+      ? (w > 1000 ? 20.0 : 14.0)
+      : (w < 420 ? 8.0 : 10.0);
 
-    // 🧱 Base constants
-    const padding = 16.0;
-    const spacing = 12.0;
+  const minCard = 56.0;
+  const maxCard = 220.0;
 
-    // 🧩 Column logic
-    int crossAxisCount;
-    if (isTablet) {
-      crossAxisCount = isLandscape ? 4 : 3;
-    } else {
-      crossAxisCount = totalCards <= 6 ? 2 : 3;
-      if (isLandscape && totalCards > 6) crossAxisCount = 4;
+  double bestCard = minCard;
+  int bestCols = 2;
+  double bestTopPad = 0.0;
+
+  final maxCols = isTablet ? 7 : total.clamp(2, 5);
+
+  for (int cols = 2; cols <= maxCols && cols <= total; cols++) {
+    final rows = (total / cols).ceil();
+    final usableW = w - (cols - 1) * spacing - 16;
+    final usableH = h - (rows - 1) * spacing - 16;
+    if (usableW <= 0 || usableH <= 0) continue;
+
+    final cellW = usableW / cols;
+    final cellH = usableH / rows;
+    final card = (cellW < cellH ? cellW : cellH).clamp(minCard, maxCard);
+
+    final totalGridHeight = rows * card + (rows - 1) * spacing;
+    if (totalGridHeight > h) continue;
+
+    final topPad = ((h - totalGridHeight) / 2).clamp(0.0, double.infinity);
+
+    final better = (card > bestCard) ||
+        (card == bestCard && rows < (total / bestCols).ceil());
+
+    if (better) {
+      bestCard = card.toDouble();
+      bestCols = cols;
+      bestTopPad = topPad;
     }
-
-    final rows = (totalCards / crossAxisCount).ceil();
-
-    // 📏 Available height (subtracts app bar + text area)
-    final availableHeight =
-        size.height - (rows - 1) * spacing - padding * 2 - kToolbarHeight - 160;
-
-    final cardHeight = availableHeight / rows;
-    final cardWidth =
-        (size.width - (padding * 2) - (crossAxisCount - 1) * spacing) /
-            crossAxisCount;
-
-    // ⚙️ Slightly wider cards on tablets for larger avatars
-    final aspectRatio = (cardWidth / cardHeight).clamp(
-      isTablet ? 0.9 : 0.8,
-      isTablet ? 1.3 : 1.2,
-    );
-
-    return GridLayout(
-      crossAxisCount: crossAxisCount,
-      aspectRatio: aspectRatio,
-      cardWidth: cardWidth,
-      cardHeight: cardHeight,
-      isTablet: isTablet,
-      isLandscape: isLandscape,
-      spacing: spacing,
-      padding: padding,
-    );
   }
 
-  /// 🧠 Determines if screen is a tablet based on shortest side
-  static bool _isTablet(Size size) {
-    final shortestSide = size.shortestSide;
-    return shortestSide > 600; // standard breakpoint
-  }
+  return GridLayout(
+    cardSize: bestCard,
+    spacing: spacing,
+    topPad: bestTopPad,
+    cols: bestCols,
+  );
 }

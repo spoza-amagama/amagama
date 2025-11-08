@@ -1,43 +1,26 @@
 // 📄 lib/widgets/play/match_flip_card.dart
 //
-// 🎴 MatchFlipCard
+// 🎴 MatchFlipCard — circular flip with shared mismatch signal
 // ------------------------------------------------------------
-// Visual component that renders a single flipping card
-// used in Amagama’s word matching game.
-//
-// RESPONSIBILITIES
-// • Displays card front/back visuals with flip animation.
-// • Synchronizes animation state with [CardItem.isFaceUp].
-// • Disables taps while animating or when matched.
-// • Triggers visual sparkle overlay when matched.
-//
-// DEPENDENCIES
-// • [FlipAnimationMixin] for 3D rotation logic.
-// • [CardItem] model for card state (id, word, isFaceUp, isMatched).
-// • [SparkleLayer] for reward animation overlay.
-//
-// RELATED CLASSES
-// • [AnimatedMatchGrid] / [MatchCardGrid] — grid parent.
-// • [GameController] — manages tap logic and flip state updates.
-//
+// • Smooth Y-axis flip animation.
+// • Matched cards turn green and stay up.
+// • Both mismatched cards flash red (from GameController signal).
+// • Fully responsive and independent of sparkleKey.
 
-import 'package:amagama/mixins/index.dart';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:amagama/models/card_item.dart';
-import 'package:amagama/widgets/sparkle_layer.dart';
+import 'package:amagama/state/game_controller.dart';
 
 class MatchFlipCard extends StatefulWidget {
   final CardItem card;
-  final GlobalKey sparkleKey;
   final VoidCallback onTap;
-  final double avatarScale;
 
   const MatchFlipCard({
     super.key,
     required this.card,
-    required this.sparkleKey,
     required this.onTap,
-    this.avatarScale = 0.8,
   });
 
   @override
@@ -45,126 +28,146 @@ class MatchFlipCard extends StatefulWidget {
 }
 
 class _MatchFlipCardState extends State<MatchFlipCard>
-    with SingleTickerProviderStateMixin, FlipAnimationMixin<MatchFlipCard> {
+    with SingleTickerProviderStateMixin {
+  bool _flashRed = false;
+
   @override
   void initState() {
     super.initState();
-    initFlipAnimation();
 
-    // 👇 Sync controller initial value to card state
-    flipController.value = widget.card.isFaceUp ? 1.0 : 0.0;
-  }
-
-  @override
-  void didUpdateWidget(MatchFlipCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // 👇 Flip animation follows model property
-    updateFlip(widget.card.isFaceUp);
+    // Listen globally for mismatched card signals
+    final game = context.read<GameController>();
+    game.mismatchedCards.addListener(_onMismatchSignal);
   }
 
   @override
   void dispose() {
-    disposeFlipAnimation();
+    final game = context.read<GameController>();
+    game.mismatchedCards.removeListener(_onMismatchSignal);
     super.dispose();
+  }
+
+  void _onMismatchSignal() {
+    final game = context.read<GameController>();
+    final mismatchIds = game.mismatchedCards.value;
+
+    if (mismatchIds.contains(widget.card.id)) {
+      setState(() => _flashRed = true);
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) setState(() => _flashRed = false);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (!flipAnim.isAnimating && !widget.card.isMatched)
-          ? widget.onTap
-          : null,
-      child: AnimatedBuilder(
-        animation: flipAnim,
-        builder: (context, _) {
-          final angle = flipAnim.value * 3.1416;
-          final isFront = angle <= 3.1416 / 2;
-
-          return Transform(
-            alignment: Alignment.center,
-            transform: buildFlipTransform(angle),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (isFront)
-                  _buildCardFront(widget.card)
-                else
-                  Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.rotationY(3.1416),
-                    child: _buildCardBack(),
-                  ),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    ignoring: true,
-                    child: SparkleLayer(key: widget.sparkleKey),
-                  ),
-                ),
-              ],
-            ),
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 400),
+        switchInCurve: Curves.easeInOut,
+        switchOutCurve: Curves.easeInOut,
+        layoutBuilder: (current, previous) =>
+            Stack(children: [if (current != null) current, ...previous]),
+        transitionBuilder: (child, animation) {
+          final rotate =
+              Tween<double>(begin: math.pi, end: 0.0).animate(animation);
+          return AnimatedBuilder(
+            animation: rotate,
+            child: child,
+            builder: (context, childWidget) {
+              final isUnder =
+                  (childWidget?.key != ValueKey(widget.card.isFaceUp));
+              final angle =
+                  isUnder ? math.min(rotate.value, math.pi / 2) : rotate.value;
+              return Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..setEntry(3, 2, 0.001)
+                  ..rotateY(angle),
+                child: childWidget,
+              );
+            },
           );
         },
+        child: widget.card.isFaceUp
+            ? _buildFront(key: const ValueKey(true))
+            : _buildBack(key: const ValueKey(false)),
       ),
     );
   }
 
-  // 🧩 Card Front (Avatar + Word)
-  Widget _buildCardFront(CardItem card) {
-    final imageAsset = 'assets/images/${card.word.toLowerCase()}.png';
-    return Container(
+  // 🂠 Back (animal avatar)
+  Widget _buildBack({Key? key}) {
+    final avatarIndex = (widget.card.id % 30) + 1;
+    final avatarFile =
+        'assets/avatars/animal_${avatarIndex.toString().padLeft(2, '0')}.png';
+
+    final bgColor = _flashRed
+        ? Colors.redAccent
+        : Colors.orangeAccent; // normal orange back
+
+    return AnimatedContainer(
+      key: key,
+      duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: card.isMatched
-              ? [Colors.green.shade300, Colors.green.shade500]
-              : [Colors.orange.shade100, Colors.orange.shade300],
-        ),
-        boxShadow: [
+        color: bgColor,
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: Colors.black26,
             blurRadius: 6,
-            offset: const Offset(2, 3),
+            offset: Offset(0, 3),
           ),
         ],
       ),
-      child: Center(
-        child: FractionallySizedBox(
-          widthFactor: widget.avatarScale,
-          heightFactor: widget.avatarScale,
-          child: ClipOval(
-            child: Image.asset(
-              imageAsset,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Center(
-                child: Text('🧩', style: TextStyle(fontSize: 28)),
-              ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Image.asset(
+          avatarFile,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stack) =>
+              const Icon(Icons.extension, color: Colors.green, size: 36),
+        ),
+      ),
+    );
+  }
+
+  // 🂡 Front (word text)
+  Widget _buildFront({Key? key}) {
+    final color = widget.card.isMatched
+        ? Colors.lightGreen
+        : Colors.white;
+
+    return AnimatedContainer(
+      key: key,
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            widget.card.word,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: Colors.black87,
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  // 🔒 Card Back (when face-down)
-  Widget _buildCardBack() {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.blueGrey.shade100,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 6,
-            offset: const Offset(2, 3),
-          ),
-        ],
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.help_outline_rounded,
-          size: 36,
-          color: Colors.black54,
         ),
       ),
     );

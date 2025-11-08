@@ -1,26 +1,35 @@
 // 📄 lib/controllers/card_grid_controller.dart
 //
-// 🧠 CardGridController (functional refactor)
+// 🧩 CardGridController
 // ------------------------------------------------------------
-// Orchestrates layout, flip logic, and audio playback.
-// Pure controller — no UI widgets defined here.
-//
-// RESPONSIBILITIES
-// • Handles tap → flip → audio → match → sentence sequence.
-// • Provides grid layout metrics.
-// • Notifies listeners for glow/match visual triggers.
-//
-// DEPENDENCIES
-// • [GameController] — manages card state.
-// • [AudioService] — plays word and sentence audio.
-//
+// Coordinates card-flip flow between GameController and UI.
+// • Plays word audio on every flip except the final match
+// • Plays full sentence audio when deck is complete
+// • Handles glow/matched overlays and grid layout calculations
+// ------------------------------------------------------------
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/models/card_item.dart';
+import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/services/audio/audio_service.dart';
+
+class CardGridLayout {
+  final double cardSize;
+  final double spacing;
+  final double topPadding;
+  final int cols;
+  final bool scrollable;
+
+  const CardGridLayout({
+    required this.cardSize,
+    required this.spacing,
+    required this.topPadding,
+    required this.cols,
+    required this.scrollable,
+  });
+}
 
 class CardGridController extends ChangeNotifier {
   final AudioService _audio = AudioService();
@@ -28,12 +37,9 @@ class CardGridController extends ChangeNotifier {
   int? _glowCardId;
   String? _lastWord;
 
-  final void Function(String word)? onWordFlip;
-  final void Function(String sentenceId)? onSentenceComplete;
-
-  CardGridController({this.onWordFlip, this.onSentenceComplete});
-
-  // 🎯 Single orchestrating function
+  // ---------------------------------------------------------------------------
+  // 🔊 Main entry — handles tap + audio selection
+  // ---------------------------------------------------------------------------
   Future<void> handleCardFlip({
     required BuildContext context,
     required CardItem item,
@@ -41,114 +47,74 @@ class CardGridController extends ChangeNotifier {
     required Size boxSize,
     required int totalCards,
   }) async {
-    // Layout metrics are computed per frame
-    final layout = computeGridLayout(boxSize: boxSize, totalCards: totalCards);
-    debugPrint(
-        '🧮 Layout: ${layout.cols}x${(totalCards / layout.cols).ceil()} • Card ${layout.cardSize}px');
-
     final game = context.read<GameController>();
-    final beforeMatched =
-        game.deck.where((c) => c.isMatched).map((c) => c.id).toSet();
+    final beforeMatchedCount = game.deck.where((c) => c.isMatched).length;
 
-    await game.onCardTapped(item);
+    // perform core logic (no audio inside game controller)
+    final result = await game.onCardTapped(item);
 
+    // evaluate completion
     final allNowMatched = game.deck.every((c) => c.isMatched);
+    final becameFinalByThisTap =
+        (result == CardMatchResult.matched) &&
+        (beforeMatchedCount + 2 == game.deck.length);
 
-    // 🔊 Word playback
-    if (!item.isMatched && item.isFaceUp && !allNowMatched) {
-      if (_lastWord != item.word) {
-        _lastWord = item.word;
-        await _waitForAudioQueue();
-        await _audio.playWord(item.word);
-        onWordFlip?.call(item.word);
-      }
-      _triggerGlow(item.id);
-    }
-
-    // ✅ Matched feedback
-    final afterMatched =
-        game.deck.where((c) => c.isMatched).map((c) => c.id).toSet();
-    final newMatches = afterMatched.difference(beforeMatched);
-    if (newMatches.isNotEmpty) {
-      _markMatched(newMatches);
-      Future.delayed(
-          const Duration(milliseconds: 600), () => _unmarkMatched(newMatches));
-    }
-
-    // 🗣️ Full sentence playback
-    if (allNowMatched) {
+    // decide audio
+    if (becameFinalByThisTap || allNowMatched) {
+      // ✅ final pair — play sentence only
       await _waitForAudioQueue();
       await _audio.playSentence(sentenceId);
-      onSentenceComplete?.call(sentenceId.toString());
       _lastWord = null;
+    } else {
+      // 🎧 normal flip — play word
+      await _waitForAudioQueue();
+      await _audio.playWord(item.word);
+      _lastWord = item.word;
+    }
+
+    // visuals
+    switch (result) {
+      case CardMatchResult.pending:
+        _triggerGlow(item.id);
+        break;
+      case CardMatchResult.matched:
+        final newlyMatched =
+            game.deck.where((c) => c.isMatched).map((c) => c.id).toSet();
+        _markMatched(newlyMatched);
+        Future.delayed(const Duration(milliseconds: 600), () {
+          _unmarkMatched(newlyMatched);
+        });
+        break;
+      case CardMatchResult.mismatch:
+        _glowCardId = null;
+        notifyListeners();
+        break;
     }
   }
 
-  // 📐 Layout Calculation
-  CardGridLayout _computeLayout(Size size, int totalCards) {
-    final w = size.width;
-    final h = size.height;
-    final spacing = w < 400
-        ? 8
-        : w < 600
-            ? 10
-            : 14;
-
-    int cols = 2;
-    int rows = (totalCards / cols).ceil();
-    double cardSize = 0;
-
-    for (int c = 2; c <= totalCards; c++) {
-      final r = (totalCards / c).ceil();
-      final availableW = w - (c - 1) * spacing - 16;
-      final availableH = h - (r - 1) * spacing - 16;
-      if (availableW <= 0 || availableH <= 0) continue;
-      final estimate = (availableW / c).clamp(40.0, availableH / r);
-      if (c * r >= totalCards && estimate > cardSize) {
-        cols = c;
-        rows = r;
-        cardSize = estimate;
-      }
+  // ---------------------------------------------------------------------------
+  // 🎧 Helpers
+  // ---------------------------------------------------------------------------
+  Future<void> _waitForAudioQueue() async {
+    while (_audio.isPlaying) {
+      await Future.delayed(const Duration(milliseconds: 100));
     }
-
-    final usedH = rows * cardSize + (rows - 1) * spacing;
-    final topPadding = ((h - usedH) / 2).clamp(0.0, double.infinity);
-
-    return CardGridLayout(
-      cols: cols,
-      cardSize: cardSize.clamp(50.0, 140.0),
-      spacing: spacing.toDouble(),
-      topPadding: topPadding,
-      scrollable: usedH > h,
-    );
   }
 
-  // 🌐 Public API wrapper for UI widgets
-  CardGridLayout computeGridLayout({
-    required Size boxSize,
-    required int totalCards,
-  }) {
-    return _computeLayout(boxSize, totalCards);
-  }
-
-  // 🧩 State Queries
+  // ---------------------------------------------------------------------------
+  // ✨ Visual-state helpers
+  // ---------------------------------------------------------------------------
   bool isMatched(int id) => _matched.contains(id);
   bool isGlowing(int id) => _glowCardId == id;
 
-  // 🔊 Audio Sync
-  Future<void> _waitForAudioQueue() async {
-    while (_audio.isPlaying) {
-      await Future.delayed(const Duration(milliseconds: 50));
-    }
-  }
-
-  // ✨ Glow + Match Handlers
   void _triggerGlow(int id) {
     _glowCardId = id;
     notifyListeners();
-    Future.delayed(const Duration(milliseconds: 800), () {
-      _glowCardId = null;
-      notifyListeners();
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (_glowCardId == id) {
+        _glowCardId = null;
+        notifyListeners();
+      }
     });
   }
 
@@ -161,21 +127,31 @@ class CardGridController extends ChangeNotifier {
     _matched.removeAll(ids);
     notifyListeners();
   }
-}
 
-// 📏 Grid layout data holder
-class CardGridLayout {
-  final int cols;
-  final double cardSize;
-  final double spacing;
-  final double topPadding;
-  final bool scrollable;
+  // ---------------------------------------------------------------------------
+  // 📐 Layout calculator used by AnimatedMatchGrid
+  // ---------------------------------------------------------------------------
+  CardGridLayout computeGridLayout({
+    required Size boxSize,
+    required int totalCards,
+  }) {
+    const spacing = 8.0;
+    const topPadding = 16.0;
 
-  const CardGridLayout({
-    required this.cols,
-    required this.cardSize,
-    required this.spacing,
-    required this.topPadding,
-    required this.scrollable,
-  });
+    int cols = (boxSize.width ~/ 100).clamp(2, 5);
+    double cardSize =
+        (boxSize.width - (cols + 1) * spacing) / cols;
+
+    final rows = (totalCards / cols).ceil();
+    final totalHeight = rows * (cardSize + spacing) + topPadding;
+    final scrollable = totalHeight > boxSize.height;
+
+    return CardGridLayout(
+      cardSize: cardSize,
+      spacing: spacing,
+      topPadding: topPadding,
+      cols: cols,
+      scrollable: scrollable,
+    );
+  }
 }

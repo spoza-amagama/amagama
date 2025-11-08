@@ -1,10 +1,15 @@
-// 📂 lib/widgets/play/sentence_stack.dart
-import 'package:flutter/material.dart';
-import 'package:amagama/widgets/sentence_header.dart';
-import 'package:amagama/widgets/sparkle_layer.dart';
+// 📄 lib/widgets/play/sentence_stack.dart
+//
+// ✨ SentenceStack
+// ------------------------------------------------------------
+// Combines the responsive [SentenceHeader] with sparkle overlay.
+// Provides animation via [AnimationController].
+// No internal duplicate sentence text.
 
-/// ✨ SentenceStack
-/// Combines the sentence header animation and sparkle overlay.
+import 'package:flutter/material.dart';
+import 'package:amagama/widgets/sparkle_layer.dart';
+import 'package:amagama/widgets/sentence_header.dart';
+
 class SentenceStack extends StatelessWidget {
   final String text;
   final AnimationController controller;
@@ -22,7 +27,13 @@ class SentenceStack extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        SentenceHeader(text: text, controller: controller),
+        // ✅ Use SentenceHeader for actual text display
+        SentenceHeader(
+          text: text,
+          controller: controller,
+        ),
+
+        // ✨ Sparkle overlay
         Positioned.fill(
           child: IgnorePointer(
             ignoring: true,

@@ -1,74 +1,50 @@
 // 📄 lib/widgets/play/match_card_back.dart
 //
-// 🟢 MatchCardBack
+// 🂠 MatchCardBack — avatar ≤ 80% of card diameter
 // ------------------------------------------------------------
-// Displays the back side of a memory card — the revealed word.
-// Includes optional sparkles when matched.
-//
+// Circle with subtle shadow and an animal avatar constrained
+// by FractionallySizedBox so it never exceeds 80%.
+
 import 'package:flutter/material.dart';
-import 'package:amagama/widgets/sparkle_layer.dart';
 
 class MatchCardBack extends StatelessWidget {
-  final String word;
-  final bool isMatched;
-  final GlobalKey<SparkleLayerState>? sparkleKey;
-
-  const MatchCardBack({
-    super.key,
-    required this.word,
-    required this.isMatched,
-    this.sparkleKey,
-  });
+  final int id;
+  final bool flashRed; // optional visual from mismatch
+  const MatchCardBack({super.key, required this.id, this.flashRed = false});
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final diameter = constraints.biggest.shortestSide;
-        final bgColor = isMatched ? Colors.green.shade100 : Colors.red.shade100;
+    final avatarIndex = (id % 30) + 1;
+    final avatarFile =
+        'assets/avatars/animal_${avatarIndex.toString().padLeft(2, "0")}.png';
 
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: diameter,
-              height: diameter,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: bgColor,
-                border: Border.all(
-                  color:
-                      isMatched ? Colors.green.shade700 : Colors.red.shade400,
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isMatched
-                        ? Colors.green.shade700.withValues(alpha: 0.3)
-                        : Colors.red.shade700.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                word,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isMatched
-                      ? Colors.green.shade800
-                      : Colors.red.shade800,
-                ),
-              ),
-            ),
-            if (isMatched && sparkleKey != null)
-              SparkleLayer(key: sparkleKey!),
-          ],
-        );
-      },
+    final baseColor = Colors.orangeAccent;
+    final color = flashRed ? const Color(0xFFFF3B30) : baseColor;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: FractionallySizedBox(
+        widthFactor: 0.8,  // ✅ ≤80%
+        heightFactor: 0.8, // ✅ ≤80%
+        child: Image.asset(
+          avatarFile,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.extension, color: Colors.green, size: 36),
+        ),
+      ),
     );
   }
 }

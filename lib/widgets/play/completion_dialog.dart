@@ -1,48 +1,34 @@
 // 📄 lib/widgets/play/completion_dialog.dart
-import 'package:flutter/material.dart';
-import 'package:amagama/models/sentence.dart';
+// 🏁 CompletionDialog
+// ----------------------------------------------------------
+// Shows end-of-round actions. Supports "Next" and optional "Repeat".
+// If `onRepeat` is null, hides the Repeat button.
 
-/// 🎉 CompletionDialog — shown when the player finishes a sentence.
+import 'package:flutter/material.dart';
+
 class CompletionDialog extends StatelessWidget {
-  final int sentenceIndex;
-  final Sentence? sentence; // 👈 make optional
-  final String? sentenceText; // 👈 alternate input
   final VoidCallback onNext;
+  final VoidCallback? onRepeat;
 
   const CompletionDialog({
     super.key,
-    required this.sentenceIndex,
-    this.sentence,
-    this.sentenceText,
     required this.onNext,
+    this.onRepeat, // optional
   });
-
-  String get displayText =>
-      sentence?.text ?? sentenceText ?? 'Unknown sentence';
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text(
-        'Great job!',
-        textAlign: TextAlign.center,
-        style: TextStyle(fontWeight: FontWeight.bold),
-      ),
-      content: Text(
-        'You finished:\n"$displayText"',
-        textAlign: TextAlign.center,
-      ),
-      actionsAlignment: MainAxisAlignment.center,
+      title: const Text('Great job!'),
+      content: const Text('You matched all the cards.'),
       actions: [
-        ElevatedButton(
-          onPressed: onNext,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.amber,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+        if (onRepeat != null)
+          TextButton(
+            onPressed: onRepeat,
+            child: const Text('Repeat'),
           ),
+        FilledButton(
+          onPressed: onNext,
           child: const Text('Next'),
         ),
       ],
