@@ -3,6 +3,7 @@
 // 🎮 Amagama — Entry Point
 // Initializes game state, audio controller, and global providers.
 // Defines routes for / (Home) and /play (Game).
+// Applies the African-inspired AmagamaTheme.
 // ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
@@ -19,7 +20,7 @@ import 'services/audio/audio_service.dart';
 import 'screens/index.dart';
 
 // 🎨 Theme
-import 'theme/theme.dart';
+import 'theme/index.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,7 +50,8 @@ class AmagamaApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Amagama',
-        theme: buildTheme(),
+        theme: AmagamaTheme.light(),
+        darkTheme: AmagamaTheme.dark(),
         initialRoute: '/',
         routes: {
           '/': (context) => const LoadingWrapper(),
@@ -75,7 +77,7 @@ class LoadingWrapper extends StatelessWidget {
         backgroundColor: Color(0xFFFFF8E1),
         body: Center(
           child: CircularProgressIndicator(
-            color: Color(0xFFFFC107),
+            color: Color(0xFFEAB308), // from AmagamaColors.warning
           ),
         ),
       );

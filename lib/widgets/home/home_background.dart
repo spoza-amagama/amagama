@@ -1,10 +1,15 @@
+// 📄 lib/widgets/home/home_background.dart
+//
+// 🌅 HomeBackground — animated African-themed gradient with fade-in
+// ------------------------------------------------------------
+// • Loops warm sunrise hues subtly over time
+// • Adds fade-in animation on mount (1s)
+// • Designed to evoke the shifting light of dawn on the savannah
+// ------------------------------------------------------------
+
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// 🌈 HomeBackground — animated gradient with fade-in
-/// ------------------------------------------------------------
-/// • Loops gradient hues subtly over time
-/// • Adds fade-in animation on mount (1s)
 class HomeBackground extends StatefulWidget {
   const HomeBackground({super.key});
 
@@ -14,8 +19,8 @@ class HomeBackground extends StatefulWidget {
 
 class _HomeBackgroundState extends State<HomeBackground>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeIn;
+  late final AnimationController _controller;
+  late final Animation<double> _fadeIn;
 
   @override
   void initState() {
@@ -27,12 +32,12 @@ class _HomeBackgroundState extends State<HomeBackground>
       duration: const Duration(seconds: 8),
     )..repeat(reverse: true);
 
-    // 🌤️ Fade in on load
-    _fadeIn = CurvedAnimation(
-      parent: Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _controller, curve: const Interval(0, 0.25)),
+    // 🌤️ Fade in on load (first second only)
+    _fadeIn = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.25, curve: Curves.easeInOut),
       ),
-      curve: Curves.easeInOut,
     );
   }
 
@@ -50,17 +55,18 @@ class _HomeBackgroundState extends State<HomeBackground>
         final t = _controller.value;
         final angle = t * 2 * math.pi;
 
-        // 🎨 Smooth color shifting
+        // 🎨 Warm shifting hues
         final color1 = HSVColor.fromAHSV(
           1.0,
           (30 + t * 20) % 360,
-          0.7,
+          0.6,
           1.0,
         ).toColor();
+
         final color2 = HSVColor.fromAHSV(
           1.0,
           (10 + t * 40) % 360,
-          0.8,
+          0.7,
           0.95,
         ).toColor();
 

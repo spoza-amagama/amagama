@@ -8,7 +8,7 @@ import 'package:amagama/widgets/sparkle_layer.dart';
 class SentenceStack extends StatelessWidget {
   final String text;
   final AnimationController controller;
-  final GlobalKey<SparkleLayerState> sparkleKey;
+  final GlobalKey sparkleKey;
 
   const SentenceStack({
     super.key,

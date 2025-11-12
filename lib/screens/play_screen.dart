@@ -1,30 +1,25 @@
 // 📄 lib/screens/play_screen.dart
 //
-// 🎮 Amagama — Play Screen
-// ------------------------------------------------------------
-// Unified Play Screen that mirrors the Home Screen header and manages gameplay
-// for one sentence. Displays the current sentence, progress indicators, cycle
-// progress bar, sparkle animations, matching grid, and completion dialog.
-// Integrates with GameController and AudioService for state + sound.
-// ------------------------------------------------------------
+// 🎮 Amagama — Play Screen (African-themed, refactored)
+// Orchestrates gameplay using Provider GameController and extracted widgets.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:amagama/data/index.dart';
-import 'package:amagama/models/sentence.dart';
-import 'package:amagama/state/game_controller.dart';
-import 'package:amagama/services/audio/audio_service.dart';
+import '../../data/index.dart';
+import '../../models/sentence.dart';
+import '../../state/game_controller.dart';
+import '../../services/audio/audio_service.dart';
+import '../../theme/index.dart';
 
-// 🧩 Widgets (direct imports only — no barrels, no aliases)
-import 'package:amagama/widgets/home/home_header.dart';
-import 'package:amagama/widgets/play/play_body.dart';
-import 'package:amagama/widgets/play/completion_dialog.dart';
-import 'package:amagama/widgets/play/cycle_progress_bar.dart';
-import 'package:amagama/widgets/play/sentence_stack.dart';
-import 'package:amagama/widgets/play/progress_message.dart';
-import 'package:amagama/widgets/play/audio_state_bridge.dart';
-import 'package:amagama/widgets/sparkle_layer.dart';
+// Widgets
+import '../../widgets/home/home_header.dart';
+import '../../widgets/play/completion_dialog.dart';
+import '../../widgets/play/sentence_progress_section.dart';
+import '../../widgets/play/animated_sentence_header.dart';
+import '../../widgets/play/game_play_area.dart';
+import '../../widgets/play/play_footer.dart';
+import '../../widgets/sparkle_layer.dart';
 
 class PlayScreen extends StatefulWidget {
   const PlayScreen({super.key});
@@ -36,6 +31,7 @@ class PlayScreen extends StatefulWidget {
 class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
   final AudioService _audio = AudioService();
 
+  // Audio bridge notifiers
   final ValueNotifier<String> _currentWord = ValueNotifier<String>('');
   final ValueNotifier<String> _currentSentenceId = ValueNotifier<String>('');
   final ValueNotifier<bool> _playWord = ValueNotifier<bool>(false);
@@ -81,7 +77,7 @@ class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
       barrierDismissible: false,
       builder: (_) => CompletionDialog(
         sentenceIndex: sentenceIndex,
-        sentence: sentence, // ✅ Sentence type
+        sentence: sentence,
         onNext: () => Navigator.of(context).pop(),
       ),
     );
@@ -100,6 +96,7 @@ class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
 
     _currentSentenceId.value = idx.toString();
 
+    // Kick the sentence animation each build if idle
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_sentenceAnim.isAnimating && _sentenceAnim.value == 0.0) {
         _sentenceAnim.forward();
@@ -108,58 +105,29 @@ class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
 
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: AmagamaColors.surface,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 🟩 Header (matches Home Screen)
             HomeHeader(sentence: s.text, isSmall: false, game: game),
 
-            // 🧾 Sentence + subtle progress
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    s.text,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Sentence $currentSentence of $totalSentences',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.color
-                              ?.withValues(alpha: 0.7),
-                        ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Cycle ${cyclesDone + 1} of $cyclesTarget',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.color
-                              ?.withValues(alpha: 0.7),
-                        ),
-                  ),
-                  const SizedBox(height: 10),
-                  const CycleProgressBar(),
-                ],
-              ),
+            // 🧾 Themed sentence + subtle progress
+            SentenceProgressSection(
+              sentenceText: s.text,
+              currentSentence: currentSentence,
+              totalSentences: totalSentences,
+              cyclesDone: cyclesDone,
+              cyclesTarget: cyclesTarget,
             ),
 
             // ✨ Animated sentence header + sparkles
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: SentenceStack(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AmagamaSpacing.md,
+                vertical: AmagamaSpacing.xs,
+              ),
+              child: AnimatedSentenceHeader(
                 text: s.text,
                 controller: _sentenceAnim,
                 sparkleKey: _sentenceSparkleKey,
@@ -168,39 +136,25 @@ class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
 
             // 🎲 Gameplay area
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: PlayBody(
-                  game: game, // ✅ Required param
-                  fadeOut: true,
-                  audioService: _audio,
-                  onWord: (word) => _queuePlayWord(word),
-                  onComplete: (_) async {
-                    await _showCompletionDialog(
-                      sentenceIndex: idx,
-                      sentence: s,
-                    );
-                  },
-                ),
+              child: GamePlayArea(
+                game: game,
+                audioService: _audio,
+                onWord: (word) => _queuePlayWord(word),
+                onComplete: (_) async {
+                  await _showCompletionDialog(
+                    sentenceIndex: idx,
+                    sentence: s,
+                  );
+                },
               ),
             ),
 
-            // 🗣️ Friendly progress message footer
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 4, 16, 12),
-              child: ProgressMessage(),
-            ),
-
-            // 🎧 Hidden audio bridge
-            SizedBox(
-              height: 0,
-              width: 0,
-              child: AudioStateBridge(
-                word: _currentWord,
-                sentenceNotifier: _currentSentenceId,
-                playWord: _playWord,
-                playSentence: _playSentence,
-              ),
+            // 🗣️ Footer (message + hidden audio bridge)
+            PlayFooter(
+              word: _currentWord,
+              sentenceNotifier: _currentSentenceId,
+              playWord: _playWord,
+              playSentence: _playSentence,
             ),
           ],
         ),
