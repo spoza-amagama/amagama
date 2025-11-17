@@ -1,10 +1,17 @@
+// 📄 lib/widgets/home/home_content.dart
+//
+// 🏡 HomeContent — fixed vertical layout (no vertical scroll)
+// Ensures PageView gets full width & fixed height for scrolling.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../state/game_controller.dart';
-import '../../data/index.dart';
-import 'home_header.dart';
-import 'home_carousel.dart';
-import 'grownup_pin_dialog.dart'; // ✅ PIN dialog
+
+import 'package:amagama/theme/index.dart';
+import 'package:amagama/state/game_controller.dart';
+import 'package:amagama/data/index.dart';
+
+import 'grownup_pin_dialog.dart';
+import 'home_sentence_carousel.dart';
 
 class HomeContent extends StatelessWidget {
   const HomeContent({super.key});
@@ -12,139 +19,135 @@ class HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
-    final s = sentences[game.currentSentenceIndex];
-    final isSmall = MediaQuery.of(context).size.height < 720;
+    final idx = game.currentSentenceIndex;
+    final sentence = sentences[idx];
 
-    final totalSentences = sentences.length;
-    final currentSentence = game.currentSentenceIndex + 1;
+    final cyclesDone = game.progress[idx].cyclesCompleted;
     final cyclesTarget = game.cyclesTarget;
-    final cyclesDone = game.progress[game.currentSentenceIndex].cyclesCompleted;
 
-    return SafeArea(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // 🧠 Header + info
-                Column(
-                  children: [
-                    HomeHeader(
-                      sentence: s.text,
-                      isSmall: isSmall,
-                      game: game,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Cycles: ${cyclesDone + 1} of $cyclesTarget',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.brown.shade700,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Sentence $currentSentence of $totalSentences',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.brown.shade600,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 13,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Divider(
-                      color: Colors.brown.shade200,
-                      thickness: 1,
-                      indent: 40,
-                      endIndent: 40,
-                      height: 12,
-                    ),
-                  ],
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const SizedBox(height: AmagamaSpacing.md),
 
-                // 🪶 Expanded carousel — takes more height now
-                const Expanded(
-                  flex: 6, // increased from 4 → 6
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 6.0),
-                    child: ClipRect(
-                      child: HomeCarousel(),
-                    ),
-                  ),
-                ),
+        Text(
+          'Current Sentence',
+          style: AmagamaTypography.titleStyle.copyWith(fontSize: 24),
+        ),
 
-                // 🧩 Compact bottom buttons
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, top: 4.0),
-                  child: Column(
-                    children: [
-                      // ▶️ Play button (smaller)
-                      ElevatedButton.icon(
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/play'),
-                        icon: const Icon(Icons.play_arrow, size: 22),
-                        label: const Text('Play'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade500,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                          minimumSize: const Size(130, 42),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+        const SizedBox(height: AmagamaSpacing.sm),
 
-                      // 🔒 Grown Ups button (smaller)
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          final allowed = await showDialog<bool>(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (_) => const GrownUpPinDialog(),
-                              ) ??
-                              false;
-
-                          if (allowed) {
-                            // ignore: use_build_context_synchronously
-                            Navigator.pushNamed(context, '/grownups');
-                          }
-                        },
-                        icon: const Icon(Icons.lock, size: 20),
-                        label: const Text('Grown Ups'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.brown.shade800,
-                          side: BorderSide(
-                              color: Colors.brown.shade400, width: 1.1),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 26, vertical: 8),
-                          minimumSize: const Size(130, 42),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textStyle: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AmagamaSpacing.xl,
+            vertical: AmagamaSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AmagamaSpacing.radiusLg),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Text(
+            sentence.text,
+            style: AmagamaTypography.bodyStyle.copyWith(
+              fontWeight: FontWeight.w700,
             ),
-          );
-        },
-      ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+
+        const SizedBox(height: AmagamaSpacing.md),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.emoji_events, color: Colors.brown, size: 20),
+            SizedBox(width: 4),
+            Text('Bronze'),
+            SizedBox(width: 16),
+            Icon(Icons.emoji_events, color: Colors.grey, size: 20),
+            SizedBox(width: 4),
+            Text('Silver'),
+            SizedBox(width: 16),
+            Icon(Icons.emoji_events, color: Colors.amber, size: 20),
+            SizedBox(width: 4),
+            Text('Gold'),
+          ],
+        ),
+
+        const SizedBox(height: AmagamaSpacing.xs),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AmagamaSpacing.lg,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: LinearProgressIndicator(
+              value: cyclesTarget == 0 ? 0 : cyclesDone / cyclesTarget,
+              minHeight: 10,
+              backgroundColor: Colors.white.withValues(alpha: 0.30),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Colors.green.shade600,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: AmagamaSpacing.sm),
+
+        Text(
+          'Sentence ${idx + 1} of ${sentences.length}',
+          style: AmagamaTypography.subtitleStyle,
+        ),
+        Text(
+          'Cycles: $cyclesDone / $cyclesTarget',
+          style: AmagamaTypography.subtitleStyle,
+        ),
+
+        const SizedBox(height: AmagamaSpacing.md),
+
+        // 🟩 FIX: give the carousel real constraints (width + height)
+        ConstrainedBox(
+          constraints: const BoxConstraints(
+            minWidth: double.infinity,
+            maxWidth: double.infinity,
+            minHeight: 120,
+            maxHeight: 120,
+          ),
+          child: const HomeSentenceCarousel(),
+        ),
+
+        const SizedBox(height: AmagamaSpacing.sm),
+
+        ElevatedButton.icon(
+          icon: const Icon(Icons.play_arrow),
+          style: AmagamaButtons.primary,
+          label: const Text('Play'),
+          onPressed: () => Navigator.pushNamed(context, '/play'),
+        ),
+
+        const SizedBox(height: AmagamaSpacing.sm),
+
+        ElevatedButton(
+          style: AmagamaButtons.secondary,
+          child: const Text('Grown Ups'),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (_) => const GrownUpPinDialog(),
+            );
+          },
+        ),
+
+        const SizedBox(height: AmagamaSpacing.lg),
+      ],
     );
   }
 }

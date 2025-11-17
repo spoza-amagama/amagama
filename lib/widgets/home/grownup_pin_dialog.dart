@@ -8,9 +8,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:amagama/theme/index.dart';
 
 class GrownUpPinDialog extends StatefulWidget {
-  const GrownUpPinDialog({super.key});
+  final bool isStandalone;
+
+  const GrownUpPinDialog({
+    super.key,
+    this.isStandalone = false,
+  });
 
   @override
   State<GrownUpPinDialog> createState() => _GrownUpPinDialogState();
@@ -51,9 +57,8 @@ class _GrownUpPinDialogState extends State<GrownUpPinDialog> {
     return AlertDialog(
       backgroundColor: const Color(0xFFFFF8E1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text(
-        'Enter Parental PIN',
-        style: TextStyle(fontWeight: FontWeight.bold),
+      title: const Text('Enter Parental PIN',
+        style: AmagamaTypography.sectionTitleStyle,
       ),
       content: TextField(
         controller: _pinController,
@@ -77,15 +82,20 @@ class _GrownUpPinDialogState extends State<GrownUpPinDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: Colors.brown),
+          child: Text('Cancel',
+            style: AmagamaTypography.buttonStyle.copyWith(
+              color: Colors.brown,
+            ),
           ),
         ),
         ElevatedButton.icon(
           onPressed: _checkPin,
           icon: const Icon(Icons.lock_open, size: 18),
-          label: const Text('Enter'),
+          label: Text('Enter',
+            style: AmagamaTypography.buttonStyle.copyWith(
+              color: Colors.white,
+            ),
+          ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.brown.shade700,
             minimumSize: const Size(100, 42),

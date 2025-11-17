@@ -9,38 +9,49 @@ import 'typography.dart';
 import 'spacing.dart';
 
 class AmagamaTheme {
-  static ThemeData light() {
-    final base = ThemeData.light();
+  // 📄 lib/theme/theme.dart
 
-    return base.copyWith(
-      colorScheme: base.colorScheme.copyWith(
-        primary: AmagamaColors.primary,
-        secondary: AmagamaColors.secondary,
-        surface: AmagamaColors.surface,
-      ),
-      scaffoldBackgroundColor: AmagamaColors.surface,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AmagamaColors.primary,
+static ThemeData light() {
+  final base = ThemeData.light();
+
+  return base.copyWith(
+    // ⭐ This becomes the TRUE background and is NOT overridden anymore
+    scaffoldBackgroundColor: AmagamaColors.background,
+
+    colorScheme: base.colorScheme.copyWith(
+      primary: AmagamaColors.primary,
+      secondary: AmagamaColors.secondary,
+
+      // ⭐ Use surface for cards/panels — slightly lighter than background
+      surface: AmagamaColors.surface,
+
+      // ⭐ Background should NOT override scaffold
+      background: AmagamaColors.surface,
+    ),
+
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AmagamaColors.primary,
+      foregroundColor: Colors.white,
+      elevation: 0,
+    ),
+
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AmagamaColors.secondary,
         foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AmagamaColors.secondary,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AmagamaSpacing.radiusMd),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AmagamaSpacing.lg,
-            vertical: AmagamaSpacing.sm,
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AmagamaSpacing.radiusMd),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AmagamaSpacing.lg,
+          vertical: AmagamaSpacing.sm,
         ),
       ),
-      textTheme: AmagamaTypography.textTheme,
-    );
-  }
+    ),
 
+    textTheme: AmagamaTypography.textTheme,
+  );
+}
   static ThemeData dark() {
     final base = ThemeData.dark();
 

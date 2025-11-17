@@ -1,19 +1,11 @@
 // 📄 lib/state/game_controller.dart
 //
-// 🧠 GameController
+// 🧠 GameController — orchestrates state for card-matching gameplay.
 // ------------------------------------------------------------
-// Core orchestrator for Amagama’s card matching gameplay.
-//
-// RESPONSIBILITIES
-// • Manages a deck of [CardItem]s for the active sentence.
-// • Handles taps, flip timing, audio playback, and matching logic.
-// • Advances to the next sentence when all matches are complete.
-// • Emits notifications for UI rebuilds.
-//
-// DESIGN
-// • Pure state manager: no UI helpers, text, or formatting.
-// • Widgets (e.g. ProgressIndicator, SentenceHeader) handle display logic.
-// • Uses collaborators for persistence, deck creation, and audio playback.
+// • Handles deck building, matching, audio, and progression
+// • Tracks cycles, trophies, and per-sentence progress
+// • Provides compatibility setters for UI components (carousel, progress list)
+// • Works with repository persistence
 //
 
 import 'package:flutter/material.dart';
@@ -37,18 +29,24 @@ class GameController extends ChangeNotifier {
   final List<CardItem> _selected = [];
   bool _busy = false;
 
+  // ---------------------------------------------------------------------------
+  // 📊 Getters
+  // ---------------------------------------------------------------------------
   int get currentSentenceIndex => _currentSentenceIndex;
   int get cyclesTarget => _cyclesTarget;
   List<CardItem> get deck => _deck;
   bool get busy => _busy;
   List<SentenceProgress> get progress => _progress;
 
-  /// Initializes a new or saved game session.
+  // ---------------------------------------------------------------------------
+  // 🚀 Initialization
+  // ---------------------------------------------------------------------------
   Future<void> init() async {
     _currentSentenceIndex = await _repo.loadCurrentSentence();
     _cyclesTarget = await _repo.loadCyclesTarget();
     _progress = await _repo.loadProgress();
 
+    // Ensure progress exists for all sentences
     final ids = _progress.map((p) => p.sentenceId).toSet();
     for (final s in sentences) {
       if (!ids.contains(s.id)) {
@@ -63,12 +61,19 @@ class GameController extends ChangeNotifier {
         );
       }
     }
+
+    // Sort by sentence id for stability
     _progress.sort((a, b) => a.sentenceId.compareTo(b.sentenceId));
+
+    // Build initial deck
     _deck = _deckBuilder.buildDeckForSentence(_currentSentenceIndex);
+
     notifyListeners();
   }
 
-  /// Primary game loop: handle taps, wait for animation, play audio, evaluate match.
+  // ---------------------------------------------------------------------------
+  // 🂠 Matching Logic
+  // ---------------------------------------------------------------------------
   Future<CardMatchResult> onCardTapped(CardItem card) async {
     if (_busy || card.isMatched) return CardMatchResult.pending;
 
@@ -77,18 +82,18 @@ class GameController extends ChangeNotifier {
     _selected.add(card);
     notifyListeners();
 
-    // Wait for flip animation then play audio
     await Future.delayed(const Duration(milliseconds: 420));
     await _audioNotifier.playWord(card.word);
 
     if (_selected.length < 2) return CardMatchResult.pending;
 
     _busy = true;
+
     final first = _selected[0];
     final second = _selected[1];
 
     if (first.word == second.word) {
-      // ✅ Match found
+      // 🎉 MATCH
       first.isMatched = true;
       second.isMatched = true;
       _selected.clear();
@@ -97,7 +102,7 @@ class GameController extends ChangeNotifier {
       await _onRoundComplete();
       return CardMatchResult.matched;
     } else {
-      // ❌ Mismatch — flip back
+      // ❌ MISMATCH
       await Future.delayed(const Duration(milliseconds: 900));
       first.isFaceUp = false;
       second.isFaceUp = false;
@@ -108,44 +113,63 @@ class GameController extends ChangeNotifier {
     }
   }
 
-  /// Called when all cards in a deck are matched.
+  // ---------------------------------------------------------------------------
+  // 🏆 Round Completion
+  // ---------------------------------------------------------------------------
   Future<void> _onRoundComplete() async {
+    // Not complete yet?
     if (_deck.any((c) => !c.isMatched)) return;
 
-    final idx = _progress.indexWhere(
-      (p) => p.sentenceId == _currentSentenceIndex,
-    );
+    // FIXED: Progress lookup must use sentence.id, not index.
+    final sentenceId = sentences[_currentSentenceIndex].id;
+
+    final idx = _progress.indexWhere((p) => p.sentenceId == sentenceId);
     if (idx == -1) return;
 
-    var p = _progress[idx];
-    final newCycles = (p.cyclesCompleted + 1).clamp(0, _cyclesTarget);
+    final old = _progress[idx];
+    final newCycles = (old.cyclesCompleted + 1).clamp(0, _cyclesTarget);
+
+    // Trophy sounds
     await _audioNotifier.playTrophy(newCycles);
 
-    _progress[idx] = p.copyWith(cyclesCompleted: newCycles);
+    // Save updated progress
+    _progress[idx] = old.copyWith(cyclesCompleted: newCycles);
 
-    // Advance to next sentence when cycles complete
-    if (p.cyclesCompleted >= _cyclesTarget &&
+    // Advance sentence when cycles target reached
+    if (newCycles >= _cyclesTarget &&
         _currentSentenceIndex < sentences.length - 1) {
       _currentSentenceIndex++;
       await _repo.saveCurrentSentence(_currentSentenceIndex);
     }
 
     await _repo.saveProgress(_progress);
+
+    // Rebuild deck
     _deck = _deckBuilder.buildDeckForSentence(_currentSentenceIndex);
+
     notifyListeners();
   }
+
   // ---------------------------------------------------------------------------
-  // 🩹 Public wrappers for UI compatibility
+  // 🩹 Public wrappers & compatibility helpers
   // ---------------------------------------------------------------------------
 
-  /// Sets a new cycles target and saves it.
+  /// Allows UI (e.g., carousel) to set a new current sentence without advancing cycles.
+  void setCurrentSentenceIndex(int index) {
+    if (index < 0 || index >= sentences.length) return;
+    _currentSentenceIndex = index;
+    _deck = _deckBuilder.buildDeckForSentence(index);
+    notifyListeners();
+  }
+
+  /// Updates cycles target (1–6) and saves to repo.
   Future<void> setCyclesTarget(int value) async {
     _cyclesTarget = value.clamp(1, 6);
     await _repo.saveCyclesTarget(_cyclesTarget);
     notifyListeners();
   }
 
-  /// Jumps directly to a sentence index and rebuilds deck.
+  /// UI helper used by screens to manually jump sentences.
   Future<void> jumpToSentence(int idx) async {
     if (idx < 0 || idx >= sentences.length) return;
     _currentSentenceIndex = idx;
@@ -154,7 +178,7 @@ class GameController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Fully resets all progress and restarts the game.
+  /// Hard reset for settings screen.
   Future<void> resetAll() async {
     await _repo.resetAll();
     _currentSentenceIndex = 0;
@@ -162,13 +186,31 @@ class GameController extends ChangeNotifier {
     await init();
   }
 
+  /// Returns true if the given sentence has reached its cycle target.
+  bool progressBySentenceId(dynamic sentenceId) {
+    final p = _progress.firstWhere(
+      (p) => p.sentenceId == sentenceId,
+      orElse: () => SentenceProgress(
+        sentenceId: sentenceId,
+        cyclesCompleted: 0,
+        trophyBronze: false,
+        trophySilver: false,
+        trophyGold: false,
+      ),
+    );
+    return p.cyclesCompleted >= _cyclesTarget;
+  }
+
+  /// Legacy hook: now sits idle because advancement happens automatically.
+  Future<void> finishSentence(BuildContext context) async {
+    // no-op (kept for backward compatibility)
+  }
+
   // ---------------------------------------------------------------------------
-  // 🧩 Compatibility helpers (moved inside class)
+  // 🔎 Additional helpers
   // ---------------------------------------------------------------------------
 
-  /// Returns true if the given sentence index has been unlocked.
   bool isSentenceUnlocked(int i) => i <= _currentSentenceIndex;
 
-  /// Returns progress for the current sentence.
   SentenceProgress get currentProg => _progress[_currentSentenceIndex];
 }

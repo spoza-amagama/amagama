@@ -1,5 +1,8 @@
-# analysis_options.yaml
 include: package:lints/recommended.yaml
+
+analyzer:
+  exclude:
+    - lib_backup_20251113_1418/**
 
 linter:
   rules:

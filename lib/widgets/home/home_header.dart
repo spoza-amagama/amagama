@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:amagama/state/game_controller.dart';
 import 'home_trophies.dart';
+import 'package:amagama/theme/index.dart';
 
 class HomeHeader extends StatelessWidget {
   final String sentence;
@@ -37,12 +38,10 @@ class HomeHeader extends StatelessWidget {
         const SizedBox(height: 6),
 
         // 🧠 Header label
-        Text(
-          'Your Sentence',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: isSmall ? 18 : 20,
-              ),
+        Text('Your Sentence',
+          style: AmagamaTypography.sectionTitleStyle.copyWith(
+            fontSize: isSmall ? 18 : 20,
+          ),
         ),
 
         const SizedBox(height: 8),
@@ -57,10 +56,10 @@ class HomeHeader extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             child: Text(
               sentence,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: isSmall ? 16 : 18,
-                  ),
+              style: AmagamaTypography.bodyStyle.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: isSmall ? 16 : 18,
+              ),
               textAlign: TextAlign.center,
             ),
           ),

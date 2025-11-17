@@ -1,11 +1,7 @@
 // 📄 lib/widgets/play/play_footer.dart
-//
-// Footer with friendly ProgressMessage and hidden AudioStateBridge wiring.
 
 import 'package:flutter/material.dart';
-import '../../../theme/index.dart';
-import 'progress_message.dart';
-import 'audio_state_bridge.dart';
+import 'package:amagama/theme/index.dart';
 
 class PlayFooter extends StatelessWidget {
   final ValueNotifier<String> word;
@@ -24,23 +20,17 @@ class PlayFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        bottom: AmagamaSpacing.lg,
-        top: AmagamaSpacing.sm,
-      ),
+      padding: const EdgeInsets.all(AmagamaSpacing.md),
       child: Column(
         children: [
-          const ProgressMessage(),
-          const SizedBox(height: AmagamaSpacing.sm),
-          SizedBox(
-            height: 0,
-            width: 0,
-            child: AudioStateBridge(
-              word: word,
-              sentenceNotifier: sentenceNotifier,
-              playWord: playWord,
-              playSentence: playSentence,
-            ),
+          ValueListenableBuilder(
+            valueListenable: word,
+            builder: (context, value, _) {
+              return Text(
+                value,
+                style: AmagamaTypography.subtitleStyle,
+              );
+            },
           ),
         ],
       ),
