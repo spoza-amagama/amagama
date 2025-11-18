@@ -8,7 +8,7 @@ class SentenceCarousel extends StatelessWidget {
   final void Function(int) onTap;
   final String Function(int) sentenceText;
 
-  const SentenceCarousel({
+  SentenceCarousel({
     super.key,
     required this.count,
     required this.currentIndex,

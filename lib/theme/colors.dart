@@ -12,8 +12,10 @@ class AmagamaColors {
   static const accent = Color(0xFFB91C1C); // rich red (earth/clay)
 
   // Backgrounds — warm neutrals
-  static const surface = Color(0xFFFAF7F0); // light sand
-  static const background = Color(0xFFFFFBF5); // pale ivory
+  static const surface = Color(0xFFFAF7F0); // light sand (cards / panels)
+
+  // 🌅 Soft orange wash for main screen background
+  static const background = Color(0xFFF8C27A); // soft amber backdrop
 
   // Text
   static const textPrimary = Color(0xFF2C1810); // dark cocoa

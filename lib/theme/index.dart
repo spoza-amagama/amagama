@@ -1,8 +1,9 @@
-// 📄 lib/theme/index.dart
-//
-// Barrel file exporting the African-inspired Amagama theme.
+// AUTO-GENERATED BARREL — DO NOT EDIT
+// Updated via tools/rebuild_barrels.dart
 
 export 'colors.dart';
-export 'typography.dart';
 export 'spacing.dart';
+export 'typography.dart';
+export 'amagama_decorations.dart';
 export 'theme.dart';
+export 'amagama_buttons.dart';

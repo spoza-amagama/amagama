@@ -1,41 +1,44 @@
-import 'package:flutter/material.dart';
+// 📄 lib/widgets/home/home_app_bar.dart
+//
+// 🧭 African-themed Amagama home app bar.
+// Uses Amagama theme (colors, spacing, typography) and shared decorations.
+// --------------------------------------------------------------------
 
-/// 🐘 HomeAppBar — minimalist responsive top bar.
-/// ------------------------------------------------------------
-/// • No logo or extra icons.
-/// • Responsive font scaling.
-/// • Transparent background for gradient integration.
-class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+import 'package:flutter/material.dart';
+import 'package:amagama/theme/index.dart';
+
+class HomeAppBar extends StatelessWidget {
   const HomeAppBar({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-
-    // 📏 Responsive scaling
-    final isNarrow = width < 400;
-    final fontSize = isNarrow ? 22.0 : 26.0;
-
-    return AppBar(
-      automaticallyImplyLeading: false,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      centerTitle: true,
-      title: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          'Amagama',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                color: Colors.brown.shade800,
-                letterSpacing: 0.5,
+    return Container(
+      decoration: AmagamaDecorations.appBar(),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AmagamaSpacing.md,
+            vertical: AmagamaSpacing.sm,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Amagama',
+                style: AmagamaTypography.titleStyle.copyWith(
+                  color: Colors.white,
+                ),
               ),
+              IconButton(
+                icon: const Icon(Icons.settings),
+                color: Colors.white,
+                onPressed: () {
+                  // TODO: Implement settings navigation
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

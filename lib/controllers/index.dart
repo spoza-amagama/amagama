@@ -1,3 +1,5 @@
-// AUTO-GENERATED FILE — DO NOT EDIT
+// AUTO-GENERATED BARREL — DO NOT EDIT
+// Updated via tools/rebuild_barrels.dart
+
 export 'card_grid_controller.dart';
 export 'play_audio_controller.dart';

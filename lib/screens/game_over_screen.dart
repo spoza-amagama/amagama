@@ -1,67 +1,75 @@
 // 📄 lib/screens/game_over_screen.dart
-//
-// 🎉 African-themed GameOverScreen
-// Uses modular widgets for confetti, header, stats, and buttons.
+// 🎉 Amagama — Game Over / Celebration Screen
 
 import 'package:flutter/material.dart';
-import '../../theme/index.dart';
-import '../../widgets/game_over/index.dart';
+import 'package:provider/provider.dart';
+import '../widgets/common/screen_header.dart';
+import '../widgets/game_over/game_over_header.dart';
+import '../widgets/game_over/game_over_stats_card.dart';
+import '../widgets/game_over/game_over_actions.dart';
+import '../state/game_controller.dart';
+import '../theme/index.dart';
 
 class GameOverScreen extends StatelessWidget {
-  final int score;
-  final int badgesEarned;
-
-  const GameOverScreen({
-    super.key,
-    required this.score,
-    required this.badgesEarned,
-  });
+  const GameOverScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      backgroundColor: AmagamaColors.surface,
+      backgroundColor: AmagamaColors.background,
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            // 🌈 Background gradient
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AmagamaColors.secondary.withValues(alpha: 0.9),
-                    AmagamaColors.primary.withValues(alpha: 0.85),
-                    AmagamaColors.background,
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
+            // 🧩 Header with progress + sentence info
+            Builder(
+              builder: (context) {
+                final game = context.watch<GameController>();
+                final currentIdx = game.currentSentenceIndex;
+                final cyclesDone = game.currentProg.cyclesCompleted;
+                final cyclesTarget = game.cyclesTarget;
+                final totalSentences = game.progress.length;
+
+                return ScreenHeader(
+                  title: 'Well Done!',
+                  subtitle: "You've completed the sentence!",
+                  showLogo: true,
+                  cyclesDone: cyclesDone,
+                  cyclesTarget: cyclesTarget,
+                  sentenceNumber: currentIdx + 1,
+                  totalSentences: totalSentences,
+                  leadingAction: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                );
+              },
             ),
 
-            // 🎊 Confetti
-            const ConfettiLayer(),
+            const GameOverHeader(),
+            const SizedBox(height: AmagamaSpacing.md),
 
-            // 🌞 Content
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AmagamaSpacing.lg),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const GameOverHeader(),
-                    const SizedBox(height: AmagamaSpacing.md),
-                    GameOverStatsCard(
-                      score: score,
-                      badgesEarned: badgesEarned,
-                    ),
-                    const SizedBox(height: AmagamaSpacing.xl),
-                    const GameOverActions(),
-                  ],
-                ),
-              ),
+            // 🎯 Stats (score + badges)
+            Builder(
+              builder: (context) {
+                final game = context.watch<GameController>();
+                final score = game.progress.fold<int>(
+                  0,
+                  (sum, p) => sum + p.cyclesCompleted,
+                );
+                final badgesEarned = game.progress.where(
+                  (p) => p.cyclesCompleted >= game.cyclesTarget,
+                ).length;
+
+                return GameOverStatsCard(
+                  score: score,
+                  badgesEarned: badgesEarned,
+                );
+              },
             ),
+
+            const Spacer(),
+            const GameOverActions(),
+            const SizedBox(height: AmagamaSpacing.lg),
           ],
         ),
       ),

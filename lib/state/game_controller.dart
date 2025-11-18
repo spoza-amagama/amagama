@@ -1,19 +1,6 @@
-// 📄 lib/state/game_controller.dart
 //
-// 🧠 GameController
-// ------------------------------------------------------------
-// Core orchestrator for Amagama’s card matching gameplay.
-//
-// RESPONSIBILITIES
-// • Manages a deck of [CardItem]s for the active sentence.
-// • Handles taps, flip timing, audio playback, and matching logic.
-// • Advances to the next sentence when all matches are complete.
-// • Emits notifications for UI rebuilds.
-//
-// DESIGN
-// • Pure state manager: no UI helpers, text, or formatting.
-// • Widgets (e.g. ProgressIndicator, SentenceHeader) handle display logic.
-// • Uses collaborators for persistence, deck creation, and audio playback.
+// 🧠 GameController — manages game play, progression, cycles,
+// GLOBAL trophies, deck building, and viewSentenceIndex for UI.
 //
 
 import 'package:flutter/material.dart';
@@ -30,26 +17,75 @@ class GameController extends ChangeNotifier {
   final _deckBuilder = DeckBuilder();
   final _audioNotifier = AudioNotifier();
 
+  // ---------------------------------------------------------------------------
+  // Sentence Indexing
+  // ---------------------------------------------------------------------------
   int _currentSentenceIndex = 0;
-  int _cyclesTarget = 6;
-  List<SentenceProgress> _progress = [];
-  List<CardItem> _deck = [];
-  final List<CardItem> _selected = [];
-  bool _busy = false;
-
   int get currentSentenceIndex => _currentSentenceIndex;
+
+  int _viewSentenceIndex = 0;
+  int get viewSentenceIndex => _viewSentenceIndex;
+
+  void setViewSentenceIndex(int index) {
+    _viewSentenceIndex = index;
+    notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Cycles + Progress
+  // ---------------------------------------------------------------------------
+  int _cyclesTarget = 6;
   int get cyclesTarget => _cyclesTarget;
-  List<CardItem> get deck => _deck;
-  bool get busy => _busy;
+
+  List<SentenceProgress> _progress = [];
   List<SentenceProgress> get progress => _progress;
 
-  /// Initializes a new or saved game session.
+  // ---------------------------------------------------------------------------
+  // GLOBAL Trophy Totals
+  // ---------------------------------------------------------------------------
+  int totalBronze = 0;
+  int totalSilver = 0;
+  int totalGold = 0;
+
+  // ⭐ One-shot flag for UI confetti
+  bool _justUnlockedGold = false;
+  bool get justUnlockedGold => _justUnlockedGold;
+  void consumeGoldConfetti() => _justUnlockedGold = false;
+
+  Future<void> _saveTrophyTotals() async {
+    await _repo.saveTotalBronze(totalBronze);
+    await _repo.saveTotalSilver(totalSilver);
+    await _repo.saveTotalGold(totalGold);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Deck + Matching
+  // ---------------------------------------------------------------------------
+  List<CardItem> _deck = [];
+  List<CardItem> get deck => _deck;
+
+  final List<CardItem> _selected = [];
+  bool _busy = false;
+  bool get busy => _busy;
+
+  // ---------------------------------------------------------------------------
+  // Initialization
+  // ---------------------------------------------------------------------------
   Future<void> init() async {
     _currentSentenceIndex = await _repo.loadCurrentSentence();
+    _viewSentenceIndex = _currentSentenceIndex;
+
     _cyclesTarget = await _repo.loadCyclesTarget();
     _progress = await _repo.loadProgress();
 
+    // Load GLOBAL trophy totals
+    totalBronze = await _repo.loadTotalBronze();
+    totalSilver = await _repo.loadTotalSilver();
+    totalGold = await _repo.loadTotalGold();
+
+    // Ensure progress exists for all sentences
     final ids = _progress.map((p) => p.sentenceId).toSet();
+
     for (final s in sentences) {
       if (!ids.contains(s.id)) {
         _progress.add(
@@ -63,21 +99,23 @@ class GameController extends ChangeNotifier {
         );
       }
     }
+
     _progress.sort((a, b) => a.sentenceId.compareTo(b.sentenceId));
+
     _deck = _deckBuilder.buildDeckForSentence(_currentSentenceIndex);
     notifyListeners();
   }
 
-  /// Primary game loop: handle taps, wait for animation, play audio, evaluate match.
+  // ---------------------------------------------------------------------------
+  // Card Matching
+  // ---------------------------------------------------------------------------
   Future<CardMatchResult> onCardTapped(CardItem card) async {
     if (_busy || card.isMatched) return CardMatchResult.pending;
 
-    // Flip immediately
     card.isFaceUp = true;
     _selected.add(card);
     notifyListeners();
 
-    // Wait for flip animation then play audio
     await Future.delayed(const Duration(milliseconds: 420));
     await _audioNotifier.playWord(card.word);
 
@@ -88,7 +126,6 @@ class GameController extends ChangeNotifier {
     final second = _selected[1];
 
     if (first.word == second.word) {
-      // ✅ Match found
       first.isMatched = true;
       second.isMatched = true;
       _selected.clear();
@@ -96,79 +133,136 @@ class GameController extends ChangeNotifier {
       notifyListeners();
       await _onRoundComplete();
       return CardMatchResult.matched;
-    } else {
-      // ❌ Mismatch — flip back
-      await Future.delayed(const Duration(milliseconds: 900));
-      first.isFaceUp = false;
-      second.isFaceUp = false;
-      _selected.clear();
-      _busy = false;
-      notifyListeners();
-      return CardMatchResult.mismatch;
+    }
+
+    // mismatch
+    await Future.delayed(const Duration(milliseconds: 900));
+    first.isFaceUp = false;
+    second.isFaceUp = false;
+    _selected.clear();
+    _busy = false;
+    notifyListeners();
+    return CardMatchResult.mismatch;
+  }
+
+  // ---------------------------------------------------------------------------
+  // 🏆 Award Trophies
+  // ---------------------------------------------------------------------------
+  void _awardTrophies(int newCycles, SentenceProgress old) {
+    bool awardBronze = false;
+    bool awardSilver = false;
+    bool awardGold = false;
+
+    // Bronze: 2 cycles (first time only)
+    if (newCycles >= 2 && !old.trophyBronze) {
+      awardBronze = true;
+      totalBronze += 1;
+    }
+
+    // Silver: 4 cycles (first time only)
+    if (newCycles >= 4 && !old.trophySilver) {
+      awardSilver = true;
+      totalSilver += 1;
+    }
+
+    // Gold: 6 cycles (first time only)
+    if (newCycles >= cyclesTarget && !old.trophyGold) {
+      awardGold = true;
+      totalGold += 1;
+      _justUnlockedGold = true;
+    }
+
+    if (awardBronze || awardSilver || awardGold) {
+      _saveTrophyTotals();
     }
   }
 
-  /// Called when all cards in a deck are matched.
+  // ---------------------------------------------------------------------------
+  // Round Complete
+  // ---------------------------------------------------------------------------
   Future<void> _onRoundComplete() async {
     if (_deck.any((c) => !c.isMatched)) return;
 
-    final idx = _progress.indexWhere(
-      (p) => p.sentenceId == _currentSentenceIndex,
-    );
+    final sentenceId = sentences[_currentSentenceIndex].id;
+    final idx = _progress.indexWhere((p) => p.sentenceId == sentenceId);
     if (idx == -1) return;
 
-    var p = _progress[idx];
-    final newCycles = (p.cyclesCompleted + 1).clamp(0, _cyclesTarget);
+    final old = _progress[idx];
+    final newCycles = (old.cyclesCompleted + 1).clamp(0, _cyclesTarget);
+
     await _audioNotifier.playTrophy(newCycles);
 
-    _progress[idx] = p.copyWith(cyclesCompleted: newCycles);
+    // Award global trophies based on NEW cycle count
+    _awardTrophies(newCycles, old);
 
-    // Advance to next sentence when cycles complete
-    if (p.cyclesCompleted >= _cyclesTarget &&
+    // Update per-sentence flags
+    _progress[idx] = old.copyWith(
+      cyclesCompleted: newCycles,
+      trophyBronze: old.trophyBronze || newCycles >= 2,
+      trophySilver: old.trophySilver || newCycles >= 4,
+      trophyGold: old.trophyGold || newCycles >= _cyclesTarget,
+    );
+
+    await _repo.saveProgress(_progress);
+
+    // Unlock next sentence
+    if (newCycles >= _cyclesTarget &&
         _currentSentenceIndex < sentences.length - 1) {
       _currentSentenceIndex++;
+      _viewSentenceIndex = _currentSentenceIndex;
       await _repo.saveCurrentSentence(_currentSentenceIndex);
     }
 
-    await _repo.saveProgress(_progress);
+    // Build fresh deck
     _deck = _deckBuilder.buildDeckForSentence(_currentSentenceIndex);
     notifyListeners();
   }
-  // ---------------------------------------------------------------------------
-  // 🩹 Public wrappers for UI compatibility
-  // ---------------------------------------------------------------------------
 
-  /// Sets a new cycles target and saves it.
+  // ---------------------------------------------------------------------------
+  // Sentence Switching
+  // ---------------------------------------------------------------------------
+  bool isSentenceUnlocked(int i) => i <= _currentSentenceIndex;
+
+  void setCurrentSentenceIndex(int index) {
+    if (index < 0 || index >= sentences.length) return;
+    _currentSentenceIndex = index;
+    _viewSentenceIndex = index;
+    _deck = _deckBuilder.buildDeckForSentence(index);
+    _repo.saveCurrentSentence(index);
+    notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Settings + Reset
+  // ---------------------------------------------------------------------------
   Future<void> setCyclesTarget(int value) async {
     _cyclesTarget = value.clamp(1, 6);
     await _repo.saveCyclesTarget(_cyclesTarget);
     notifyListeners();
   }
 
-  /// Jumps directly to a sentence index and rebuilds deck.
-  Future<void> jumpToSentence(int idx) async {
-    if (idx < 0 || idx >= sentences.length) return;
-    _currentSentenceIndex = idx;
-    await _repo.saveCurrentSentence(idx);
-    _deck = _deckBuilder.buildDeckForSentence(idx);
-    notifyListeners();
-  }
-
-  /// Fully resets all progress and restarts the game.
   Future<void> resetAll() async {
     await _repo.resetAll();
+
     _currentSentenceIndex = 0;
+    _viewSentenceIndex = 0;
+
+    totalBronze = 0;
+    totalSilver = 0;
+    totalGold = 0;
+    _justUnlockedGold = false;
+    await _saveTrophyTotals();
+
     _progress = [];
     await init();
   }
 
   // ---------------------------------------------------------------------------
-  // 🧩 Compatibility helpers (moved inside class)
+  // Legacy API
   // ---------------------------------------------------------------------------
+  Future<void> finishSentence(BuildContext context) async {
+    // no-op legacy
+  }
 
-  /// Returns true if the given sentence index has been unlocked.
-  bool isSentenceUnlocked(int i) => i <= _currentSentenceIndex;
-
-  /// Returns progress for the current sentence.
   SentenceProgress get currentProg => _progress[_currentSentenceIndex];
 }

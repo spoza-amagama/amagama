@@ -10,8 +10,7 @@ class GameOverHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      'You Did It!',
+    return Text('You Did It!',
       style: AmagamaTypography.textTheme.headlineLarge?.copyWith(
         color: AmagamaColors.textPrimary,
         shadows: [

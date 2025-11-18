@@ -31,8 +31,7 @@ class GameOverActions extends StatelessWidget {
             ),
           ),
           icon: const Icon(Icons.replay_rounded),
-          label: Text(
-            'Play Again',
+          label: Text('Play Again',
             style: textTheme.labelLarge?.copyWith(color: Colors.white),
           ),
         ),
@@ -53,8 +52,7 @@ class GameOverActions extends StatelessWidget {
             ),
           ),
           icon: const Icon(Icons.home_rounded),
-          label: Text(
-            'Home',
+          label: Text('Home',
             style: textTheme.labelLarge?.copyWith(
               color: AmagamaColors.primary,
             ),

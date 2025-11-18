@@ -32,8 +32,7 @@ class PlayBody extends StatelessWidget {
 
     if (cards.isEmpty) {
       return const Center(
-        child: Text(
-          'No cards available',
+        child: Text('No cards available',
           style: TextStyle(fontSize: 18, color: Colors.black54),
         ),
       );

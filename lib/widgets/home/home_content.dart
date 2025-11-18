@@ -1,10 +1,24 @@
+// 📄 lib/widgets/home/home_content.dart
+//
+// 🏡 HomeContent — main Home Screen body.
+// • Compressed vertical layout for small screens
+// • Uses refactored widgets (stats, trophies, progress, buttons)
+// • Smooth carousel height animation
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../state/game_controller.dart';
-import '../../data/index.dart';
-import 'home_header.dart';
-import 'home_carousel.dart';
-import 'grownup_pin_dialog.dart'; // ✅ PIN dialog
+
+import 'package:amagama/theme/index.dart';
+import 'package:amagama/state/game_controller.dart';
+import 'package:amagama/data/index.dart';
+import 'package:amagama/utils/sentence_height.dart';
+
+import 'home_sentence_carousel.dart';
+import 'home_sentence_stats.dart';
+import 'home_trophies_row.dart';
+import 'home_progress_bar.dart';
+import 'play_button_centered.dart';
+import 'grownups_button.dart';
 
 class HomeContent extends StatelessWidget {
   const HomeContent({super.key});
@@ -12,139 +26,90 @@ class HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
-    final s = sentences[game.currentSentenceIndex];
-    final isSmall = MediaQuery.of(context).size.height < 720;
 
-    final totalSentences = sentences.length;
-    final currentSentence = game.currentSentenceIndex + 1;
+    // 👁 Live carousel index
+    final int viewIdx = game.viewSentenceIndex;
+    final sentence = sentences[viewIdx];
+
+    // 🎮 Active sentence progress
+    final int activeIdx = game.currentSentenceIndex;
+    final cyclesDone = game.progress[activeIdx].cyclesCompleted;
     final cyclesTarget = game.cyclesTarget;
-    final cyclesDone = game.progress[game.currentSentenceIndex].cyclesCompleted;
 
-    return SafeArea(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // 🧠 Header + info
-                Column(
-                  children: [
-                    HomeHeader(
-                      sentence: s.text,
-                      isSmall: isSmall,
-                      game: game,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Cycles: ${cyclesDone + 1} of $cyclesTarget',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.brown.shade700,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Sentence $currentSentence of $totalSentences',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.brown.shade600,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 13,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Divider(
-                      color: Colors.brown.shade200,
-                      thickness: 1,
-                      indent: 40,
-                      endIndent: 40,
-                      height: 12,
-                    ),
-                  ],
-                ),
+    // 🏆 Global totals
+    final bronze = game.totalBronze;
+    final silver = game.totalSilver;
+    final gold = game.totalGold;
 
-                // 🪶 Expanded carousel — takes more height now
-                const Expanded(
-                  flex: 6, // increased from 4 → 6
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 6.0),
-                    child: ClipRect(
-                      child: HomeCarousel(),
-                    ),
-                  ),
-                ),
+    // 🎛 Dynamic sentence card height
+    final lineCount = estimateSentenceLines(sentence.text);
+    final double targetHeight = computeSentenceCardHeight(lineCount);
 
-                // 🧩 Compact bottom buttons
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, top: 4.0),
-                  child: Column(
-                    children: [
-                      // ▶️ Play button (smaller)
-                      ElevatedButton.icon(
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/play'),
-                        icon: const Icon(Icons.play_arrow, size: 22),
-                        label: const Text('Play'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade500,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                          minimumSize: const Size(130, 42),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ⬆️ Smaller gap
+        const SizedBox(height: AmagamaSpacing.sm),
 
-                      // 🔒 Grown Ups button (smaller)
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          final allowed = await showDialog<bool>(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (_) => const GrownUpPinDialog(),
-                              ) ??
-                              false;
+        // ------------------------------------------------------------
+        // 🎠 Sentence Carousel — animated height
+        // ------------------------------------------------------------
+        TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          tween: Tween<double>(end: targetHeight),
+          builder: (_, h, child) => SizedBox(height: h, child: child),
+          child: const HomeSentenceCarousel(),
+        ),
 
-                          if (allowed) {
-                            // ignore: use_build_context_synchronously
-                            Navigator.pushNamed(context, '/grownups');
-                          }
-                        },
-                        icon: const Icon(Icons.lock, size: 20),
-                        label: const Text('Grown Ups'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.brown.shade800,
-                          side: BorderSide(
-                              color: Colors.brown.shade400, width: 1.1),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 26, vertical: 8),
-                          minimumSize: const Size(130, 42),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textStyle: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+        const SizedBox(height: 18), // 🔽 tighter
+
+        // ------------------------------------------------------------
+        // 📘 Sentence X / Y + Cycles
+        // ------------------------------------------------------------
+        HomeSentenceStats(
+          viewIndex: viewIdx,
+          cyclesDone: cyclesDone,
+          cyclesTarget: cyclesTarget,
+        ),
+
+        const SizedBox(height: 12), // 🔽 tighter
+
+        // ------------------------------------------------------------
+        // 🏆 Trophy Row — smaller circles & reduced spacing
+        // ------------------------------------------------------------
+        HomeTrophiesRow(
+          bronze: bronze,
+          silver: silver,
+          gold: gold,
+        ),
+
+        const SizedBox(height: 12), // 🔽 tighter spacing
+
+        // ------------------------------------------------------------
+        // 📊 Progress Bar
+        // ------------------------------------------------------------
+        HomeProgressBar(
+          progress: cyclesDone,
+          target: cyclesTarget,
+        ),
+
+        const SizedBox(height: 26), // 🔽 previously xl
+
+        // ------------------------------------------------------------
+        // ▶ Play Button (perfectly centered label)
+        // ------------------------------------------------------------
+        const PlayButtonCentered(),
+
+        const SizedBox(height: 14),
+
+        // ------------------------------------------------------------
+        // 🔒 Grown Ups Button
+        // ------------------------------------------------------------
+        const GrownUpsButton(),
+
+        const SizedBox(height: 18), // 🔽 tighter to bottom
+      ],
     );
   }
 }
