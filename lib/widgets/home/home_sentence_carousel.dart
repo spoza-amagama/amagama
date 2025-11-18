@@ -1,18 +1,17 @@
 // 📄 lib/widgets/home/home_sentence_carousel.dart
 //
-// ⭐ Fully scrollable horizontal carousel (ListView + snapping)
-// • Continuous horizontal scroll (NOT page-by-page)
-// • Snaps to nearest card
-// • Locked sentences dim + snap-back
-// • No clipping
-// • Works perfectly on macOS, iOS, Android, Web
+// 🎠 HomeSentenceCarousel — infinite, snapping sentence carousel.
+// • Center card scaling
+// • Infinite scroll via virtual index
+// • Respects GameController locking/progress
+//
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:amagama/theme/index.dart';
 import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/data/index.dart';
+import 'package:amagama/widgets/home/sentence_card.dart';
 
 class HomeSentenceCarousel extends StatefulWidget {
   const HomeSentenceCarousel({super.key});
@@ -22,131 +21,85 @@ class HomeSentenceCarousel extends StatefulWidget {
 }
 
 class _HomeSentenceCarouselState extends State<HomeSentenceCarousel> {
-  late final ScrollController _scroll;
-  final itemWidth = 260.0; // card size + padding
+  static const int _kVirtualItemCount = 1000000;
+
+  late final PageController _controller;
+
+  int _computeInitialPage(GameController game) {
+    final int realIndex = game.currentSentenceIndex;
+    final int len = sentences.length;
+    if (len == 0) return 0;
+    final int mid = _kVirtualItemCount ~/ 2;
+    final int base = mid - (mid % len);
+    return base + realIndex;
+  }
 
   @override
   void initState() {
     super.initState();
     final game = context.read<GameController>();
-    _scroll = ScrollController(
-      initialScrollOffset: game.currentSentenceIndex * itemWidth,
+    _controller = PageController(
+      viewportFraction: 0.78,
+      initialPage: _computeInitialPage(game),
     );
   }
 
-  void _snapTo(int index) {
-    _scroll.animateTo(
-      index * itemWidth,
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOut,
-    );
+  int _realIndex(int virtualIndex) {
+    final len = sentences.length;
+    if (len == 0) return 0;
+    final int result = virtualIndex % len;
+    return result < 0 ? result + len : result;
   }
 
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
 
-    return LayoutBuilder(
-      builder: (context, box) {
-        return SizedBox(
-          height: box.maxHeight,
-          width: box.maxWidth,
-          child: NotificationListener<ScrollEndNotification>(
-            onNotification: (n) {
-              final position = _scroll.offset;
-              int index = (position / itemWidth).round();
+    return PageView.builder(
+      controller: _controller,
+      physics: const PageScrollPhysics(),
+      itemCount: _kVirtualItemCount,
+      onPageChanged: (virtualPage) {
+        final realIndex = _realIndex(virtualPage);
+        game.setViewSentenceIndex(realIndex);
+        if (game.isSentenceUnlocked(realIndex)) {
+          game.setCurrentSentenceIndex(realIndex);
+        }
+      },
+      itemBuilder: (context, virtualIndex) {
+        final int index = _realIndex(virtualIndex);
+        final sentence = sentences[index];
 
-              if (index < 0) index = 0;
-              if (index >= sentences.length) index = sentences.length - 1;
+        final bool isActive = index == game.currentSentenceIndex;
+        final bool isUnlocked = game.isSentenceUnlocked(index);
 
-              // Lock logic
-              if (game.isSentenceUnlocked(index)) {
-                game.jumpToSentence(index);
-              } else {
-                _snapTo(game.currentSentenceIndex);
-              }
+        bool isCompleted = false;
+        if (index >= 0 && index < game.progress.length) {
+          isCompleted =
+              game.progress[index].cyclesCompleted >= game.cyclesTarget;
+        }
 
-              return true;
-            },
-            child: ListView.builder(
-              controller: _scroll,
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: sentences.length,
-              itemBuilder: (context, i) {
-                final s = sentences[i];
-                final unlocked = game.isSentenceUnlocked(i);
-                final isCurrent = i == game.currentSentenceIndex;
+        final bool isLocked = !isUnlocked;
 
-                return SizedBox(
-                  width: itemWidth,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 150),
-                    opacity: unlocked ? 1 : 0.45,
-                    child: AnimatedScale(
-                      scale: isCurrent ? 1.0 : 0.92,
-                      duration: const Duration(milliseconds: 150),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade200,
-                          borderRadius:
-                              BorderRadius.circular(AmagamaSpacing.radiusLg),
-                          border: Border.all(
-                            color: unlocked
-                                ? Colors.green.shade700
-                                : Colors.grey.shade600,
-                            width: isCurrent ? 3 : 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          children: [
-                            Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Text(
-                                  s.text,
-                                  textAlign: TextAlign.center,
-                                  style: AmagamaTypography.bodyStyle.copyWith(
-                                    fontSize: unlocked ? 15 : 13,
-                                    fontWeight: isCurrent
-                                        ? FontWeight.w600
-                                        : FontWeight.w400,
-                                    color: unlocked
-                                        ? Colors.black
-                                        : Colors.grey.shade700,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            if (!unlocked)
-                              const Positioned(
-                                right: 8,
-                                top: 6,
-                                child: Icon(
-                                  Icons.lock,
-                                  size: 20,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            double scale = 1.0;
+            if (_controller.position.haveDimensions) {
+              final page = _controller.page ?? _controller.initialPage.toDouble();
+              final distance = (page - virtualIndex).abs();
+              scale = (1.0 - distance * 0.25).clamp(0.8, 1.0);
+            }
+            return Transform.scale(
+              scale: scale,
+              child: child,
+            );
+          },
+          child: SentenceCard(
+            sentenceText: sentence.text,
+            isActive: isActive,
+            isCompleted: isCompleted,
+            isLocked: isLocked,
           ),
         );
       },

@@ -1,14 +1,14 @@
-// AUTO-GENERATED BARREL — DO NOT EDIT
-// Updated via tools/rebuild_barrels.dart
+// 📄 lib/widgets/home/index.dart
+//
+// 🏡 Barrel file for Home widgets.
+// Keeps imports short and respects single-responsibility-per-file.
+//
 
-export 'home_trophies.dart';
-export 'home_background.dart';
-export 'reset_dialog.dart';
 export 'home_content.dart';
-export 'home_buttons.dart';
-export 'grownup_pin_dialog.dart';
-export 'trophy_chip.dart';
-export 'home_app_bar.dart';
-export 'home_header.dart';
-export 'home_sentence_header.dart';
 export 'home_sentence_carousel.dart';
+export 'home_sentence_stats.dart';
+export 'home_trophies_row.dart';
+export 'home_progress_bar.dart';
+export 'trophy_column.dart';
+export 'play_button_centered.dart';
+export 'grownups_button.dart';

@@ -1,3 +1,8 @@
+// 📄 lib/models/progress.dart
+//
+// Per-sentence progress model including trophies.
+//
+
 class SentenceProgress {
   final int sentenceId;
   final int cyclesCompleted;
@@ -31,7 +36,6 @@ class SentenceProgress {
         'trophyGold': trophyGold,
       };
 
-  /// 🧩 Add this method so GameController can update progress safely
   SentenceProgress copyWith({
     int? sentenceId,
     int? cyclesCompleted,
