@@ -23,7 +23,9 @@ class PlayButtonCentered extends StatelessWidget {
         children: [
           Text(
             "Play",
-            style: AmagamaTypography.buttonStyle.copyWith(color: Colors.white),
+            style: AmagamaTypography.buttonStyle.copyWith(
+              color: Colors.white,
+            ),
           ),
           const Positioned(
             left: 20,

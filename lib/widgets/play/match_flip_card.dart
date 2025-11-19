@@ -13,16 +13,12 @@
 //
 // DEPENDENCIES
 // • [FlipAnimationMixin] for 3D rotation logic.
-// • [CardItem] model for card state (id, word, isFaceUp, isMatched).
+// • [CardItem] model for card state.
 // • [SparkleLayer] for reward animation overlay.
 //
-// RELATED CLASSES
-// • [AnimatedMatchGrid] / [MatchCardGrid] — grid parent.
-// • [GameController] — manages tap logic and flip state updates.
-//
 
-import 'package:amagama/mixins/index.dart';
 import 'package:flutter/material.dart';
+import 'package:amagama/mixins/index.dart';
 import 'package:amagama/models/card_item.dart';
 import 'package:amagama/widgets/sparkle_layer.dart';
 
@@ -51,15 +47,13 @@ class _MatchFlipCardState extends State<MatchFlipCard>
     super.initState();
     initFlipAnimation();
 
-    // 👇 Sync controller initial value to card state
+    // Sync initial visual state with model
     flipController.value = widget.card.isFaceUp ? 1.0 : 0.0;
   }
 
   @override
   void didUpdateWidget(MatchFlipCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // 👇 Flip animation follows model property
     updateFlip(widget.card.isFaceUp);
   }
 
@@ -112,6 +106,7 @@ class _MatchFlipCardState extends State<MatchFlipCard>
   // 🧩 Card Front (Avatar + Word)
   Widget _buildCardFront(CardItem card) {
     final imageAsset = 'assets/images/${card.word.toLowerCase()}.png';
+
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,

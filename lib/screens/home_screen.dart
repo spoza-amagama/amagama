@@ -1,10 +1,11 @@
 // 📄 lib/screens/home_screen.dart
 //
-// 🏡 Home Screen — fixed vertical layout, safe + no overflow
+// 🏡 Home Screen — stable vertical layout, no double scrolling
 // ------------------------------------------------------------
-// • Shows App header
-// • Wraps HomeContent in Expanded to prevent vertical overflow
-// • No scrolling on this screen (HomeContent manages its own)
+// • Header stays fixed
+// • HomeContent scrolls internally (if needed)
+// • Avoids overflow on small devices
+// • Matches new Amagama UI patterns
 // ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
@@ -17,23 +18,19 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: AmagamaColors.background,
       body: SafeArea(
         child: Column(
-          children: const [
-            // App title + logo
+          children: [
             ScreenHeader(
               title: 'Amagama',
               showLogo: true,
             ),
 
-            // Ensures HomeContent fills remaining space
+            // HomeContent manages its own scroll behavior.
             Expanded(
-              child: SingleChildScrollView(
-                physics: NeverScrollableScrollPhysics(),
-                child: HomeContent(),
-              ),
+              child: HomeContent(),
             ),
           ],
         ),

@@ -1,36 +1,58 @@
 // 📄 lib/widgets/home/grownups_button.dart
+//
+// 🔒 GrownUpsButton — entry to parental controls with themed styling.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
 import 'package:amagama/widgets/grownups/grownup_pin_dialog.dart';
-import 'package:amagama/routes/index.dart';
 
 class GrownUpsButton extends StatelessWidget {
   const GrownUpsButton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      style: TextButton.styleFrom(
-        backgroundColor: AmagamaColors.surface,
-        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (_) => const GrownupPinDialog(),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: AmagamaColors.surface.withValues(alpha: 0.8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.lock_outline_rounded,
+                size: 20,
+                color: AmagamaColors.textPrimary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Grown ups',
+                style: AmagamaTypography.bodyStyle.copyWith(
+                  color: AmagamaColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      onPressed: () async {
-        final ok = await showDialog<bool>(
-          context: context,
-          builder: (_) => const GrownUpPinDialog(),
-        );
-        if (ok == true) {
-          Navigator.pushNamed(context, AppRoutes.grownups);
-        }
-      },
-      child: Text(
-        "Grown Ups",
-        style: AmagamaTypography.buttonStyle
-            .copyWith(color: AmagamaColors.textPrimary),
       ),
     );
   }

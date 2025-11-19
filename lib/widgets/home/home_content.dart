@@ -1,19 +1,20 @@
 // 📄 lib/widgets/home/home_content.dart
 //
-// 🏡 HomeContent — main Home Screen body (visible progress bar + compact layout)
+// 🏡 HomeContent — main Home Screen body.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:amagama/theme/index.dart';
 import 'package:amagama/state/game_controller.dart';
-import 'package:amagama/data/index.dart';
 import 'package:amagama/utils/sentence_height.dart';
 
-// Local widgets
-import 'home_sentence_carousel.dart';
+import 'home_header.dart';
+import 'home_sentence_header.dart';
 import 'home_sentence_stats.dart';
-import 'home_trophies_row.dart';
+import 'home_sentence_carousel.dart';
+import 'home_progress_bar.dart';
+import 'home_buttons.dart';
 import 'play_button_centered.dart';
 import 'grownups_button.dart';
 
@@ -24,35 +25,26 @@ class HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
 
-    // ---------------------------------------------------------------------------
-    // 🛑 SAFE LOAD — avoid RangeError before GameController.init()
-    // ---------------------------------------------------------------------------
-    if (game.progress.isEmpty) {
+    // 🛑 Prevent crash before GameController.init() finishes
+    if (!game.sentences.ready ||
+        game.progress.all.isEmpty ||
+        game.cycles.cyclesTarget == 0) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const CircularProgressIndicator(
-                color: Color(0xFFEAB308),
+                color: AmagamaColors.warning,
                 strokeWidth: 4,
               ),
               const SizedBox(height: 20),
               Text(
-                "Loading Amagama...",
+                'Loading Amagama...',
                 style: AmagamaTypography.titleStyle.copyWith(
                   fontSize: 20,
                   color: AmagamaColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                "Preparing your sentence deck",
-                style: AmagamaTypography.bodyStyle.copyWith(
-                  color: AmagamaColors.textSecondary,
-                  fontSize: 14,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -62,112 +54,71 @@ class HomeContent extends StatelessWidget {
       );
     }
 
-    // ---------------------------------------------------------------------------
-    // ✅ Normal render (data loaded)
-    // ---------------------------------------------------------------------------
+    final int idx = game.sentences.currentSentence;
+    final sentence = game.sentences.byIndex(idx);
+    final prog = game.progress.byIndex(idx);
+    final cyclesTarget = game.cycles.cyclesTarget;
 
-    // Live sentence index + text
-    final int viewIdx = game.viewSentenceIndex;
-    final sentence = sentences[viewIdx];
+    final sentenceHeight = SentenceHeight.of(context, sentence.text);
 
-    // Active progress
-    final int activeIdx = game.currentSentenceIndex;
-    final int cyclesDone = game.progress[activeIdx].cyclesCompleted;
-    final int cyclesTarget = game.cyclesTarget;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AmagamaSpacing.md,
+        vertical: AmagamaSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Logo + trophies summary
+          HomeHeader(game: game),
 
-    // Global trophies
-    final int bronze = game.totalBronze;
-    final int silver = game.totalSilver;
-    final int gold = game.totalGold;
+          const SizedBox(height: AmagamaSpacing.md),
 
-    // Sentence card height
-    final int lineCount = estimateSentenceLines(sentence.text);
-    final double targetHeight = computeSentenceCardHeight(lineCount);
-
-    // Fraction for bar fill
-    final double fraction = cyclesTarget == 0
-        ? 0
-        : (cyclesDone / cyclesTarget).clamp(0.0, 1.0);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 6),
-
-        // 🎠 Carousel with animated height
-        TweenAnimationBuilder<double>(
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeOutCubic,
-          tween: Tween<double>(end: targetHeight),
-          builder: (_, h, child) => SizedBox(height: h, child: child),
-          child: const HomeSentenceCarousel(),
-        ),
-
-        const SizedBox(height: 8),
-
-        // Sentence number + cycles
-        HomeSentenceStats(
-          viewIndex: viewIdx,
-          cyclesDone: cyclesDone,
-          cyclesTarget: cyclesTarget,
-        ),
-
-        const SizedBox(height: 8),
-
-        // -------------------------------------------------------------------
-        // 📊 PROGRESS BAR (now clearly visible even at 0 / 6)
-        // -------------------------------------------------------------------
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Container(
-            height: 12,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF3D6), // light cream track
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: AmagamaColors.textSecondary,
-                width: 1,
-              ),
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: fraction,
-                child: fraction == 0
-                    ? const SizedBox.shrink()
-                    : Container(
-                        decoration: BoxDecoration(
-                          color: AmagamaColors.secondary, // green fill
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-              ),
-            ),
+          // Sentence header (1 of XX)
+          HomeSentenceHeader(
+            sentenceNumber: idx + 1,
+            totalSentences: game.sentences.total,
+            cyclesDone: prog.cyclesCompleted,
+            cyclesTarget: cyclesTarget,
           ),
-        ),
 
-        const SizedBox(height: 14),
+          const SizedBox(height: AmagamaSpacing.xs),
 
-        // 🏆 Trophies row
-        HomeTrophiesRow(
-          bronze: bronze,
-          silver: silver,
-          gold: gold,
-        ),
+          // Stats row
+          HomeSentenceStats(
+            cyclesDone: prog.cyclesCompleted,
+            cyclesTarget: cyclesTarget,
+            sentenceHeight: sentenceHeight,
+          ),
 
-        const SizedBox(height: 20),
+          const SizedBox(height: AmagamaSpacing.sm),
 
-        // ▶ Play button
-        const PlayButtonCentered(),
+          HomeProgressBar(
+            cyclesDone: prog.cyclesCompleted,
+            cyclesTarget: cyclesTarget,
+          ),
 
-        const SizedBox(height: 12),
+          const SizedBox(height: AmagamaSpacing.lg),
 
-        // 🔒 Grown Ups
-        const GrownUpsButton(),
+          // Sentence carousel
+          SizedBox(
+            height: sentenceHeight,
+            child: const HomeSentenceCarousel(),
+          ),
 
-        const SizedBox(height: 14),
-      ],
+          const SizedBox(height: AmagamaSpacing.lg),
+
+          const PlayButtonCentered(),
+          const SizedBox(height: 12),
+
+          const HomeButtons(),
+          const SizedBox(height: 12),
+
+          const GrownUpsButton(),
+
+          const SizedBox(height: 14),
+        ],
+      ),
     );
   }
 }

@@ -2,53 +2,53 @@
 //
 // 🎲 AnimatedMatchGrid
 // ------------------------------------------------------------
-// Displays a responsive grid of [MatchFlipCard] widgets.
-// Integrates glow and matched highlights from [CardGridController].
+// Renders a responsive grid of [MatchFlipCard] widgets.
+// Uses [GridLayoutHelper] for layout calculations.
 //
 // RESPONSIBILITIES
-// • Renders dynamic card grid layout per screen size.
-// • Delegates card flipping and audio playback to controller.
-// • Layers glow/match visual feedback over each card.
+// • Layout cards responsively based on available size.
+// • Render flip cards with glow + matched highlight.
+// • Delegate tap handling to the parent via [onCardTap].
 //
-// DEPENDENCIES
-// • [CardGridController] — orchestrates flip/audio/match state.
-// • [CardGridGlow], [CardGridMatchedHighlight] — visual effects.
-// • [MatchFlipCard] — interactive card widget.
+// NOTE
+// • No direct dependency on GameController or services.
+// • All game logic lives in the caller (e.g. PlayBody).
 //
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:amagama/models/card_item.dart';
-import 'package:amagama/controllers/card_grid_controller.dart';
+import 'package:amagama/widgets/grid_layout_helper.dart';
 import 'package:amagama/widgets/play/match_flip_card.dart';
 import 'package:amagama/widgets/play/card_grid_glow.dart';
 import 'package:amagama/widgets/play/card_grid_matched_highlight.dart';
 
 class AnimatedMatchGrid extends StatelessWidget {
   final List<CardItem> cards;
-  final int sentenceId;
+  final int sentenceIndex;
+  final bool fadeOut;
+  final void Function(CardItem) onCardTap;
 
   const AnimatedMatchGrid({
     super.key,
     required this.cards,
-    required this.sentenceId,
+    required this.sentenceIndex,
+    required this.fadeOut,
+    required this.onCardTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final controller = context.watch<CardGridController>();
-        final layout = controller.computeGridLayout(
-          boxSize: Size(constraints.maxWidth, constraints.maxHeight),
-          totalCards: cards.length,
+        final layout = GridLayoutHelper.calculate(
+          constraints.maxWidth,
+          constraints.maxHeight,
+          cards.length,
         );
 
         return GridView.builder(
           padding: EdgeInsets.only(top: layout.topPadding),
-          physics: layout.scrollable
-              ? const BouncingScrollPhysics()
-              : const NeverScrollableScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: layout.cols,
             mainAxisSpacing: layout.spacing,
@@ -58,31 +58,26 @@ class AnimatedMatchGrid extends StatelessWidget {
           itemCount: cards.length,
           itemBuilder: (context, i) {
             final card = cards[i];
-            final isMatched = controller.isMatched(card.id);
-            final isGlowing = controller.isGlowing(card.id);
+            final isMatched = card.isMatched;
+            final isFaceUp = card.isFaceUp;
             final sparkleKey = GlobalKey();
 
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                MatchFlipCard(
-                  key: ValueKey(card.id),
-                  card: card,
-                  sparkleKey: sparkleKey,
-                  onTap: () => controller.handleCardFlip(
-                    context: context,
-                    item: card,
-                    sentenceId: sentenceId,
-                    boxSize: Size(
-                      constraints.maxWidth,
-                      constraints.maxHeight,
-                    ),
-                    totalCards: cards.length,
+            return AnimatedOpacity(
+              duration: const Duration(milliseconds: 250),
+              opacity: fadeOut && isMatched ? 0.35 : 1.0,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  MatchFlipCard(
+                    key: ValueKey(card.id),
+                    card: card,
+                    sparkleKey: sparkleKey,
+                    onTap: () => onCardTap(card),
                   ),
-                ),
-                CardGridGlow(active: isGlowing),
-                CardGridMatchedHighlight(visible: isMatched),
-              ],
+                  CardGridGlow(active: isFaceUp && !isMatched),
+                  CardGridMatchedHighlight(visible: isMatched),
+                ],
+              ),
             );
           },
         );

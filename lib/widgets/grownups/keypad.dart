@@ -1,10 +1,9 @@
 // 📄 lib/widgets/grownups/keypad.dart
-
 import 'package:flutter/material.dart';
 import 'keypad_button.dart';
 
 class GrownupsKeypad extends StatelessWidget {
-  final void Function(String digit) onDigit;
+  final void Function(String d) onDigit;
   final VoidCallback onBackspace;
 
   const GrownupsKeypad({
@@ -19,21 +18,13 @@ class GrownupsKeypad extends StatelessWidget {
       children: values.map((v) {
         if (v.isEmpty) return const SizedBox(width: 70);
 
-        if (v == "⌫") {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: KeypadButton(
-              label: v,
-              onPressed: onBackspace,
-            ),
-          );
-        }
-
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: KeypadButton(
             label: v,
-            onPressed: () => onDigit(v),
+            onPressed: v == "⌫"
+                ? onBackspace
+                : () => onDigit(v),
           ),
         );
       }).toList(),
@@ -45,11 +36,11 @@ class GrownupsKeypad extends StatelessWidget {
     return Column(
       children: [
         _row(["1", "2", "3"]),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _row(["4", "5", "6"]),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _row(["7", "8", "9"]),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         _row(["", "0", "⌫"]),
       ],
     );

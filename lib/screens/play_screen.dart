@@ -33,27 +33,31 @@ class _PlayScreenState extends State<PlayScreen>
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
-    final idx = game.currentSentenceIndex;
+
+    // New: sentence index from SentenceService
+    final int idx = game.sentences.currentSentence;
     final s = sentences[idx];
 
-    _sentenceId.value = idx.toString();
+    // Sentence id for footer sentence playback
+    _sentenceId.value = s.id;
 
-    // 🪄 Confetti is handled via GameController.justUnlockedGold
-    // GameController will call consumeGoldConfetti() after PlayScreen rebuilds.
+    // Progress for this sentence via ProgressService
+    final sentenceProgress = game.progress.bySentenceId(s.id);
 
     return Scaffold(
       backgroundColor: AmagamaColors.background,
       body: SafeArea(
         child: GoldConfettiOverlay(
-          trigger: game.justUnlockedGold,
+          // Gold confetti driven by TrophyService
+          trigger: game.trophies.justUnlockedGold,
           child: Column(
             children: [
               ScreenHeader(
                 title: 'Play',
                 showLogo: false,
                 subtitle: s.text,
-                cyclesDone: game.progress[idx].cyclesCompleted,
-                cyclesTarget: game.cyclesTarget,
+                cyclesDone: sentenceProgress.cyclesCompleted,
+                cyclesTarget: game.cycles.cyclesTarget,
                 sentenceNumber: idx + 1,
                 totalSentences: sentences.length,
                 leadingAction: IconButton(
@@ -73,8 +77,8 @@ class _PlayScreenState extends State<PlayScreen>
                       (_) => _playWord.value = false,
                     );
                   },
-                  // Legacy hook: still passed, but GameController no-ops it
-                  onComplete: (_) => game.finishSentence(context),
+                  // Legacy hook – safe to keep for now; you can no-op it later
+                  onComplete: (_) {},
                 ),
               ),
 

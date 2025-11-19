@@ -1,71 +1,52 @@
+// 📄 lib/widgets/home/home_trophies.dart
+//
+// 🏆 HomeTrophies — three trophy chips + subtle per-sentence bar.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:amagama/state/game_controller.dart';
-import 'package:amagama/widgets/home/trophy_chip.dart';
 
-/// 🏆 HomeTrophies — visual indicator of progress and earned trophies.
-/// ------------------------------------------------------------
-/// Displays three trophy chips (bronze, silver, gold) plus an animated
-/// progress bar showing how many cycles have been completed for the
-/// current sentence (no duplicate text line).
+import 'package:amagama/state/game_controller.dart';
+import 'package:amagama/theme/index.dart';
+
+import 'home_trophies_row.dart';
+
 class HomeTrophies extends StatelessWidget {
   const HomeTrophies({super.key});
 
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
-    final prog = game.progress[game.currentSentenceIndex];
 
-    final cyclesDone = prog.cyclesCompleted;
-    final totalCycles = game.cyclesTarget;
-    final progress = (cyclesDone / totalCycles).clamp(0.0, 1.0);
+    final idx = game.sentences.currentSentence;
+    if (game.progress.all.isEmpty || idx >= game.progress.all.length) {
+      return const SizedBox.shrink();
+    }
+
+    final prog = game.progress.byIndex(idx);
+    final cyclesTarget = game.cycles.cyclesTarget;
+    final fraction = cyclesTarget == 0
+        ? 0.0
+        : (prog.cyclesCompleted / cyclesTarget).clamp(0.0, 1.0);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 🏅 Trophy row
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            TrophyChip(
-              icon: Icons.emoji_events,
-              color: const Color(0xFFCD7F32), // bronze
-              label: 'Bronze',
-              earned: prog.trophyBronze,
-            ),
-            TrophyChip(
-              icon: Icons.emoji_events,
-              color: const Color(0xFFC0C0C0), // silver
-              label: 'Silver',
-              earned: prog.trophySilver,
-            ),
-            TrophyChip(
-              icon: Icons.emoji_events,
-              color: const Color(0xFFFFD700), // gold
-              label: 'Gold',
-              earned: prog.trophyGold,
-            ),
-          ],
+        HomeTrophiesRow(
+          bronze: game.trophies.bronze,
+          silver: game.trophies.silver,
+          gold: game.trophies.gold,
         ),
-        const SizedBox(height: 8),
-
-        // 📊 Animated progress bar only (no text)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: progress),
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeInOutCubic,
-            builder: (context, value, _) => LinearProgressIndicator(
-              value: value,
-              backgroundColor: Colors.grey.shade300,
-              color: Colors.orangeAccent.shade400,
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(8),
-            ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: fraction,
+            minHeight: 6,
+            backgroundColor:
+                AmagamaColors.surface.withValues(alpha: 0.6),
+            color: AmagamaColors.warning,
           ),
         ),
-        const SizedBox(height: 6),
       ],
     );
   }

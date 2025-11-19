@@ -1,64 +1,82 @@
 // 📄 lib/widgets/game_over/game_over_actions.dart
 //
-// Action buttons for GameOverScreen ("Play Again", "Home").
-// Uses AmagamaColors and Spacing.
+// 🎮 GameOverActions — primary actions for the Game Over screen:
+// • Play again
+// • Go home
+// • View progress
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
+import 'package:amagama/routes/index.dart';
 
 class GameOverActions extends StatelessWidget {
-  const GameOverActions({super.key});
+  final VoidCallback? onPlayAgain;
+  final VoidCallback? onHome;
+  final VoidCallback? onViewProgress;
+
+  const GameOverActions({
+    super.key,
+    this.onPlayAgain,
+    this.onHome,
+    this.onViewProgress,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = AmagamaTypography.textTheme;
+    // Provide sensible defaults if callbacks are not supplied.
+    final goHome = onHome ??
+        () => Navigator.of(context)
+            .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
 
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: AmagamaSpacing.md,
-      runSpacing: AmagamaSpacing.sm,
-      children: [
-        ElevatedButton.icon(
-          onPressed: () => Navigator.pushReplacementNamed(context, '/play'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AmagamaColors.secondary,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AmagamaSpacing.lg,
-              vertical: AmagamaSpacing.sm,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AmagamaSpacing.radiusMd),
-            ),
-          ),
-          icon: const Icon(Icons.replay_rounded),
-          label: Text('Play Again',
-            style: textTheme.labelLarge?.copyWith(color: Colors.white),
-          ),
-        ),
-        OutlinedButton.icon(
-          onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AmagamaColors.primary,
-            side: const BorderSide(
-              color: AmagamaColors.primary,
-              width: 2,
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AmagamaSpacing.lg,
-              vertical: AmagamaSpacing.sm,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AmagamaSpacing.radiusMd),
+    final playAgain = onPlayAgain ??
+        () => Navigator.of(context).pushReplacementNamed(AppRoutes.play);
+
+    final viewProgress = onViewProgress ??
+        () => Navigator.of(context).pushNamed(AppRoutes.progress);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+      child: Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.replay_rounded),
+              onPressed: playAgain,
+              style: AmagamaButtons.primary.copyWith(
+                minimumSize:
+                    WidgetStateProperty.all(const Size.fromHeight(48)),
+              ),
+              label: const Text('Play again'),
             ),
           ),
-          icon: const Icon(Icons.home_rounded),
-          label: Text('Home',
-            style: textTheme.labelLarge?.copyWith(
-              color: AmagamaColors.primary,
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.home_rounded),
+              onPressed: goHome,
+              style: AmagamaButtons.secondary.copyWith(
+                minimumSize:
+                    WidgetStateProperty.all(const Size.fromHeight(46)),
+              ),
+              label: const Text('Back to home'),
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: viewProgress,
+            icon: const Icon(Icons.bar_chart_rounded),
+            label: Text(
+              'View progress',
+              style: AmagamaTypography.bodyStyle.copyWith(
+                color: AmagamaColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

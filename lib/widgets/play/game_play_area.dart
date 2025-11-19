@@ -1,12 +1,13 @@
 // 📄 lib/widgets/play/game_play_area.dart
 //
-// Encapsulates the main interactive gameplay zone using PlayBody (existing API).
+// Encapsulates the main interactive gameplay area using PlayBody.
 
 import 'package:flutter/material.dart';
-import '../../../theme/index.dart';
-import '../../../state/game_controller.dart';
+import 'package:amagama/theme/index.dart';
+import 'package:amagama/state/game_controller.dart';
+import 'package:amagama/services/audio/audio_service.dart';
+
 import 'play_body.dart';
-import '../../../services/audio/audio_service.dart';
 
 class GamePlayArea extends StatelessWidget {
   final GameController game;
@@ -30,9 +31,9 @@ class GamePlayArea extends StatelessWidget {
         vertical: AmagamaSpacing.sm,
       ),
       child: PlayBody(
-        game: game,
         fadeOut: true,
         audioService: audioService,
+        game: game,
         onWord: onWord,
         onComplete: onComplete,
       ),

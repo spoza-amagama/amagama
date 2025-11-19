@@ -1,86 +1,61 @@
 // 📄 lib/widgets/game_over/confetti_layer.dart
 //
-// Animated confetti painter layer using AmagamaColors.
+// 🎊 ConfettiLayer — soft decorative confetti overlay for the Game Over screen.
+// Purely visual: no game state dependencies.
 
-import 'dart:math' show Random, pi;
 import 'package:flutter/material.dart';
-import 'package:amagama/theme/index.dart';
 
-class ConfettiLayer extends StatefulWidget {
-  const ConfettiLayer({super.key});
+class ConfettiLayer extends StatelessWidget {
+  final Widget child;
 
-  @override
-  State<ConfettiLayer> createState() => _ConfettiLayerState();
-}
-
-class _ConfettiLayerState extends State<ConfettiLayer>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const ConfettiLayer({
+    super.key,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (_, __) => CustomPaint(
-        painter: _ConfettiPainter(animationValue: _controller.value),
-        size: MediaQuery.of(context).size,
-      ),
+    return Stack(
+      children: [
+        child,
+        // Very light, static "confetti" dots in the background.
+        IgnorePointer(
+          child: CustomPaint(
+            painter: _ConfettiPainter(),
+            size: Size.infinite,
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _ConfettiPainter extends CustomPainter {
-  final double animationValue;
-  final Random _rand = Random();
-
-  _ConfettiPainter({required this.animationValue});
-
   @override
   void paint(Canvas canvas, Size size) {
-    final colors = [
-      AmagamaColors.primary,
-      AmagamaColors.secondary,
-      AmagamaColors.accent,
-      AmagamaColors.warning,
-      AmagamaColors.success,
+    final colors = <Color>[
+      const Color(0xFFFFC857),
+      const Color(0xFF8AC926),
+      const Color(0xFF1982C4),
+      const Color(0xFFFF595E),
     ];
 
-    final paint = Paint()..style = PaintingStyle.fill;
-    for (int i = 0; i < 80; i++) {
-      final progress = (i / 80 + animationValue) % 1.0;
-      final x = _rand.nextDouble() * size.width;
-      final y = progress * size.height;
-      final color = colors[_rand.nextInt(colors.length)];
-      final angle = _rand.nextDouble() * pi;
-      final sizeBox = _rand.nextDouble() * 10 + 4;
+    final paint = Paint();
+    final randomOffsets = <Offset>[
+      Offset(size.width * 0.15, size.height * 0.2),
+      Offset(size.width * 0.8, size.height * 0.18),
+      Offset(size.width * 0.3, size.height * 0.4),
+      Offset(size.width * 0.9, size.height * 0.5),
+      Offset(size.width * 0.2, size.height * 0.75),
+      Offset(size.width * 0.7, size.height * 0.82),
+    ];
 
-      canvas.save();
-      canvas.translate(x, y);
-      canvas.rotate(angle);
-      paint.color = color.withValues(alpha: 0.8);
-      canvas.drawRect(
-        Rect.fromCenter(center: Offset.zero, width: sizeBox, height: sizeBox / 2),
-        paint,
-      );
-      canvas.restore();
+    for (var i = 0; i < randomOffsets.length; i++) {
+      paint.color = colors[i % colors.length].withOpacity(0.35);
+      canvas.drawCircle(randomOffsets[i], 6, paint);
     }
   }
 
   @override
-  bool shouldRepaint(_) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

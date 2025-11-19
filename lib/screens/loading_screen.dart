@@ -1,9 +1,4 @@
 // 📄 lib/screens/loading_screen.dart
-//
-// ⏳ LoadingScreen — waits for GameController to be ready,
-// then redirects to the Home route exactly once.
-// ------------------------------------------------------------
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,23 +14,24 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
-  bool _navigated = false;
+  bool _started = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
 
-    if (_navigated) return;
+    _bootstrap();
+  }
 
-    final game = context.watch<GameController>();
-    final ready = game.progress.isNotEmpty && game.deck.isNotEmpty;
+  Future<void> _bootstrap() async {
+    final game = context.read<GameController>();
 
-    if (ready) {
-      _navigated = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
-      });
-    }
+    await game.init();
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed(AppRoutes.home);
   }
 
   @override
@@ -43,7 +39,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
     return const Scaffold(
       backgroundColor: AmagamaColors.background,
       body: Center(
-        child: CircularProgressIndicator(),
+        child: CircularProgressIndicator(
+          valueColor:
+              AlwaysStoppedAnimation<Color>(AmagamaColors.accent),
+        ),
       ),
     );
   }
