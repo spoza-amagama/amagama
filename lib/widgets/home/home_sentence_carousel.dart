@@ -1,4 +1,6 @@
 // 📄 lib/widgets/home/home_sentence_carousel.dart
+//
+// 🎠 HomeSentenceCarousel — week-free carousel, no cycles/progress logic.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -39,23 +41,17 @@ class _HomeSentenceCarouselState extends State<HomeSentenceCarousel> {
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
-
     final total = sentences.length;
     final currentIndex = game.sentences.viewSentence;
 
     return PageView.builder(
       controller: _controller,
       physics: const BouncingScrollPhysics(),
-      onPageChanged: (page) {
-        game.sentences.setView(page);
-      },
+      onPageChanged: (page) => game.sentences.setView(page),
       itemCount: total,
       itemBuilder: (context, index) {
         final sentence = sentences[index];
         final isUnlocked = game.sentences.isUnlocked(index);
-        final prog = game.progress.byIndex(index);
-        final isCompleted =
-            prog.cyclesCompleted >= game.cycles.cyclesTarget;
         final isActive = index == currentIndex;
 
         return AnimatedScale(
@@ -65,7 +61,7 @@ class _HomeSentenceCarouselState extends State<HomeSentenceCarousel> {
           child: SentenceCard(
             sentenceText: sentence.text,
             isActive: isActive,
-            isCompleted: isCompleted,
+            isCompleted: isUnlocked, // simple rule: unlocked = completed
             isLocked: !isUnlocked,
           ),
         );

@@ -1,4 +1,6 @@
 // 📄 lib/widgets/home/home_header.dart
+//
+// 🏆 HomeHeader — simplified week-free header.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/state/game_controller.dart';

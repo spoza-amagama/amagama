@@ -1,12 +1,10 @@
 // 📄 lib/services/progress_service.dart
 //
-// ProgressService — manages per-sentence progress (cycles + trophies)
-// and persists via GameRepository.
-//
-// NOTE: sentenceId is an int everywhere in the data model, so this service
-// now uses int instead of String for lookup and consistency.
+// ProgressService — manages cyclesCompleted + trophies per sentence.
+// Week-free, attempts removed, matches SentenceProgress model exactly.
+// ---------------------------------------------------------------------------
 
-import 'package:amagama/models/index.dart';
+import 'package:amagama/models/sentence_progress.dart';
 import 'package:amagama/repositories/game_repository.dart';
 import 'package:amagama/data/index.dart';
 
@@ -21,12 +19,12 @@ class ProgressService {
   // ---------------------------------------------------------------------------
   // INITIALIZATION
   // ---------------------------------------------------------------------------
+
   Future<void> init() async {
     _all = await _repo.loadProgress();
 
     final existingIds = _all.map((p) => p.sentenceId).toSet();
 
-    // Ensure every sentence has an entry
     for (final sentence in sentences) {
       if (!existingIds.contains(sentence.id)) {
         _all.add(
@@ -53,7 +51,6 @@ class ProgressService {
   SentenceProgress? byIndexOrNull(int index) =>
       (index < 0 || index >= _all.length) ? null : _all[index];
 
-  /// Lookup by int (matches SentenceProgress.sentenceId)
   SentenceProgress bySentenceId(int id) => _all.firstWhere(
         (p) => p.sentenceId == id,
         orElse: () => SentenceProgress(
@@ -66,7 +63,7 @@ class ProgressService {
       );
 
   // ---------------------------------------------------------------------------
-  // UPDATE + SAVE
+  // UPDATE HELPERS
   // ---------------------------------------------------------------------------
 
   void updateAtIndex(int index, SentenceProgress updated) {
@@ -74,24 +71,44 @@ class ProgressService {
     _all[index] = updated;
   }
 
-  Future<void> save() async {
-    await _repo.saveProgress(_all);
+  // ---------------------------------------------------------------------------
+  // RECORD PROGRESS (attempts REMOVED)
+  // ---------------------------------------------------------------------------
+
+  Future<void> recordSuccess(int sentenceId) async {
+    final idx = _all.indexWhere((p) => p.sentenceId == sentenceId);
+    if (idx == -1) return;
+
+    final p = _all[idx];
+
+    final updated = p.copyWith(
+      cyclesCompleted: p.cyclesCompleted + 1,
+    );
+
+    _all[idx] = updated;
+
+    await save();
   }
+
+  // ---------------------------------------------------------------------------
+  // SAVE / RESET
+  // ---------------------------------------------------------------------------
+
+  Future<void> save() async => _repo.saveProgress(_all);
 
   Future<void> reset() async {
-    _all = [];
-    await _repo.saveProgress(_all);
-  }
+    _all = sentences
+        .map(
+          (s) => SentenceProgress(
+            sentenceId: s.id,
+            cyclesCompleted: 0,
+            trophyBronze: false,
+            trophySilver: false,
+            trophyGold: false,
+          ),
+        )
+        .toList();
 
-  // ---------------------------------------------------------------------------
-  // METRICS
-  // ---------------------------------------------------------------------------
-
-  int countCompleted(int cyclesTarget) {
-    return _all.where((p) => p.cyclesCompleted >= cyclesTarget).length;
-  }
-
-  int totalCycles() {
-    return _all.fold<int>(0, (sum, p) => sum + p.cyclesCompleted);
+    await save();
   }
 }

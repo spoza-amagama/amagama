@@ -3,4 +3,4 @@
 
 export 'card_item.dart';
 export 'sentence.dart';
-export 'progress.dart';
+export 'sentence_progress.dart';

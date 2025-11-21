@@ -1,9 +1,13 @@
 // 📄 lib/services/trophy_service.dart
 //
-// TrophyService — tracks global trophy totals and applies awards
-// based on cycle thresholds. Works together with ProgressService.
+// TrophyService — week-free global trophy award system.
+// Trophies now awarded based on "number of mastered sentences":
+//
+// Bronze →  1 mastered sentence
+// Silver →  5 mastered sentences
+// Gold   → 20 mastered sentences (all)
+// ---------------------------------------------------------------------------
 
-import 'package:amagama/models/index.dart';
 import 'package:amagama/repositories/game_repository.dart';
 
 class TrophyService {
@@ -11,24 +15,21 @@ class TrophyService {
 
   TrophyService({GameRepository? repo}) : _repo = repo ?? GameRepository();
 
-  // ---------------------------------------------------------------------------
-  // GLOBAL TROPHY TOTALS
-  // ---------------------------------------------------------------------------
-
+  // Global totals
   int bronze = 0;
   int silver = 0;
   int gold = 0;
 
-  // Used by confetti system (Gold only)
+  /// Used by PlayScreen for gold confetti overlay.
   bool justUnlockedGold = false;
 
-  // Read-only wrappers (fixes analyzer errors such as bronzeTotal)
+  // Read-only getters
   int get bronzeTotal => bronze;
   int get silverTotal => silver;
   int get goldTotal => gold;
 
   // ---------------------------------------------------------------------------
-  // INIT + RESET
+  // INITIALIZATION
   // ---------------------------------------------------------------------------
 
   Future<void> init() async {
@@ -37,11 +38,9 @@ class TrophyService {
     gold = await _repo.loadTotalGold();
   }
 
-  Future<void> _saveTotals() async {
-    await _repo.saveTotalBronze(bronze);
-    await _repo.saveTotalSilver(silver);
-    await _repo.saveTotalGold(gold);
-  }
+  // ---------------------------------------------------------------------------
+  // RESET
+  // ---------------------------------------------------------------------------
 
   Future<void> reset() async {
     bronze = 0;
@@ -51,77 +50,37 @@ class TrophyService {
     await _saveTotals();
   }
 
+  Future<void> _saveTotals() async {
+    await _repo.saveTotalBronze(bronze);
+    await _repo.saveTotalSilver(silver);
+    await _repo.saveTotalGold(gold);
+  }
+
   // ---------------------------------------------------------------------------
-  // AWARD SYSTEM
+  // AWARDS (week-free & cycles-based)
   // ---------------------------------------------------------------------------
-  //
-  // Called by RoundService after each cycle update. Ensures trophies are
-  // *only awarded once* per sentence and prevents double counting.
-  //
-  // Thresholds:
-  // - Bronze  → 2 cycles
-  // - Silver  → 4 cycles
-  // - Gold    → cyclesTarget (exactly what you configure)
 
-  Future<void> applyAwards({
-    required int newCycles,
-    required SentenceProgress oldProgress,
-    required int cyclesTarget,
-  }) async {
-    bool changed = false;
+  /// Called ONLY when a sentence reaches cyclesTarget for the first time.
+  /// (RoundService detects this condition)
+  Future<void> awardForSentenceMastery() async {
+    // 1️⃣ Bronze always increments
+    bronze += 1;
 
-    // BRONZE ──────────────────────────────────────────────
-    if (newCycles >= 2 && !oldProgress.trophyBronze) {
-      bronze += 1;
-      changed = true;
-    }
-
-    // SILVER ──────────────────────────────────────────────
-    if (newCycles >= 4 && !oldProgress.trophySilver) {
+    // 2️⃣ Silver unlocks at 5 mastered sentences
+    if (bronze == 5) {
       silver += 1;
-      changed = true;
     }
 
-    // GOLD ────────────────────────────────────────────────
-    if (newCycles >= cyclesTarget && !oldProgress.trophyGold) {
+    // 3️⃣ Gold unlocks at mastering ALL 20 sentences
+    //    (adjust if you add/remove sentences)
+    if (bronze == 20) {
       gold += 1;
-      justUnlockedGold = true; // Confetti will trigger once
-      changed = true;
+      justUnlockedGold = true;
     }
 
-    if (changed) {
-      await _saveTotals();
-    }
+    await _saveTotals();
   }
 
-  /// A helper wrapper for readability when updating *one* sentence.
-  Future<void> applyAwardsForSentence({
-    required SentenceProgress before,
-    required int afterCycles,
-    required int cyclesTarget,
-  }) {
-    return applyAwards(
-      newCycles: afterCycles,
-      oldProgress: before,
-      cyclesTarget: cyclesTarget,
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // QUERY HELPERS
-  // ---------------------------------------------------------------------------
-
-  /// Returns the trophy state for a given SentenceProgress.
-  ({bool bronze, bool silver, bool gold}) awardStateFor(SentenceProgress p) {
-    return (
-      bronze: p.trophyBronze,
-      silver: p.trophySilver,
-      gold: p.trophyGold,
-    );
-  }
-
-  /// Reset the gold confetti trigger.
-  void consumeGoldConfetti() {
-    justUnlockedGold = false;
-  }
+  // Consume the gold confetti trigger after UI shows it
+  void consumeGoldConfetti() => justUnlockedGold = false;
 }

@@ -1,24 +1,68 @@
 // 📄 lib/routes/route_helpers.dart
-//
-// 🧭 Nav — tiny helpers for named routes.
-// Keeps Navigator boilerplate out of widgets.
-// ------------------------------------------------------------
+// RouteHelpers — shared helpers for custom page transitions and guarded routes.
 
 import 'package:flutter/material.dart';
-import 'app_routes.dart';
 
-class Nav {
-  static void toHome(BuildContext context) =>
-      Navigator.pushNamed(context, AppRoutes.home);
+enum RouteTransition {
+  fade,
+  slideRight,
+  slideUp,
+}
 
-  static void toPlay(BuildContext context) =>
-      Navigator.pushNamed(context, AppRoutes.play);
+class RouteHelpers {
+  const RouteHelpers._();
 
-  static void toGrownups(BuildContext context) =>
-      Navigator.pushNamed(context, AppRoutes.grownups);
+  static PageRouteBuilder<T> buildPageRoute<T>({
+    required WidgetBuilder builder,
+    required RouteSettings settings,
+    RouteTransition transition = RouteTransition.slideRight,
+    bool fullscreenDialog = false,
+  }) {
+    return PageRouteBuilder<T>(
+      settings: settings,
+      fullscreenDialog: fullscreenDialog,
+      pageBuilder: (context, animation, secondaryAnimation) => builder(context),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        switch (transition) {
+          case RouteTransition.fade:
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            );
+            return FadeTransition(
+              opacity: curved,
+              child: child,
+            );
 
-  static void replaceWithHome(BuildContext context) =>
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+          case RouteTransition.slideUp:
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            );
+            final offsetAnimation = Tween<Offset>(
+              begin: const Offset(0, 0.1),
+              end: Offset.zero,
+            ).animate(curved);
+            return SlideTransition(
+              position: offsetAnimation,
+              child: child,
+            );
 
-  static void back(BuildContext context) => Navigator.pop(context);
+          case RouteTransition.slideRight:
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            );
+            final offsetAnimation = Tween<Offset>(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).animate(curved);
+            return SlideTransition(
+              position: offsetAnimation,
+              child: child,
+            );
+        }
+      },
+    );
+  }
 }

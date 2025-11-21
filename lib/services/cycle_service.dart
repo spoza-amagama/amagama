@@ -1,32 +1,49 @@
 // 📄 lib/services/cycle_service.dart
 //
-// CycleService — manages the cycles target (1–6) for each sentence,
-// persisted via GameRepository.
+// CycleService — stores and persists cyclesTarget (2–6).
+// Default = 6; configurable in Grownups screen.
 
 import 'package:amagama/repositories/game_repository.dart';
 
 class CycleService {
+  static const int minCycles = 2;
+  static const int maxCycles = 6;
+  static const int defaultCycles = 6;
+
   final GameRepository _repo;
 
   CycleService({GameRepository? repo}) : _repo = repo ?? GameRepository();
 
-  int _cyclesTarget = 6;
+  int _cyclesTarget = defaultCycles;
+
   int get cyclesTarget => _cyclesTarget;
 
+  // ---------------------------------------------------------------------------
+  // INIT
+  // ---------------------------------------------------------------------------
+
   Future<void> init() async {
-    _cyclesTarget = await _repo.loadCyclesTarget();
-    if (_cyclesTarget < 1 || _cyclesTarget > 6) {
-      _cyclesTarget = 6;
+    final loaded = await _repo.loadCyclesTarget();
+
+    _cyclesTarget = loaded.clamp(minCycles, maxCycles);
     }
-  }
+
+  // ---------------------------------------------------------------------------
+  // UPDATE + SAVE
+  // ---------------------------------------------------------------------------
 
   Future<void> setCyclesTarget(int value) async {
-    _cyclesTarget = value.clamp(1, 6);
-    await _repo.saveCyclesTarget(_cyclesTarget);
+    final clamped = value.clamp(minCycles, maxCycles);
+    _cyclesTarget = clamped;
+    await _repo.saveCyclesTarget(clamped);
   }
 
+  // ---------------------------------------------------------------------------
+  // RESET
+  // ---------------------------------------------------------------------------
+
   Future<void> reset() async {
-    _cyclesTarget = 6;
-    await _repo.saveCyclesTarget(_cyclesTarget);
+    _cyclesTarget = defaultCycles;
+    await _repo.saveCyclesTarget(defaultCycles);
   }
 }

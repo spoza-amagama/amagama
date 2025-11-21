@@ -2,9 +2,9 @@
 //
 // 👨‍👩‍👧 Grown Ups Screen — Settings & Controls
 // ------------------------------------------------------------
-// • Reset ALL progress (cycles, trophies, decks)
-// • Change parental PIN using PIN entry flow
-// • Uses shared widgets from lib/widgets/common and lib/widgets/grownups
+// • Reset ALL progress
+// • Change parental PIN
+// • Configure cyclesTarget (2–6) for each sentence
 // ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
@@ -14,12 +14,16 @@ import 'package:amagama/theme/index.dart';
 import 'package:amagama/widgets/common/index.dart';
 import 'package:amagama/widgets/grownups/index.dart';
 import 'package:amagama/state/game_controller.dart';
+import 'package:amagama/services/cycle_service.dart';
 
 class GrownupsScreen extends StatelessWidget {
   const GrownupsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final game = context.watch<GameController>();
+    final currentCycles = game.cycles.cyclesTarget;
+
     return Scaffold(
       backgroundColor: AmagamaColors.background,
       body: SafeArea(
@@ -35,9 +39,85 @@ class GrownupsScreen extends StatelessWidget {
                 onPressed: () => Navigator.pop(context),
               ),
             ),
+
             const SizedBox(height: 24),
 
+            // ============================================================
+            // 🔵 CYCLES TARGET CONTROL (NEW)
+            // ============================================================
+            const SettingsSectionHeader(title: 'Gameplay Settings'),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AmagamaSpacing.md,
+                vertical: AmagamaSpacing.sm,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Cycles per sentence',
+                    style: AmagamaTypography.titleStyle.copyWith(
+                      fontSize: 18,
+                      color: AmagamaColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Each sentence must be completed this many times\n'
+                    'before the next one unlocks.',
+                    style: AmagamaTypography.bodyStyle.copyWith(
+                      color: AmagamaColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      const Text('${CycleService.minCycles}',
+                          style: AmagamaTypography.bodyStyle),
+                      Expanded(
+                        child: Slider(
+                          value: currentCycles.toDouble(),
+                          min: CycleService.minCycles.toDouble(),
+                          max: CycleService.maxCycles.toDouble(),
+                          divisions: CycleService.maxCycles -
+                              CycleService.minCycles,
+                          label: '$currentCycles',
+                          onChanged: (value) {
+                            context
+                                .read<GameController>()
+                                .updateCyclesTarget(value.round());
+                          },
+                        ),
+                      ),
+                      const Text('${CycleService.maxCycles}',
+                          style: AmagamaTypography.bodyStyle),
+                    ],
+                  ),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'Current: $currentCycles cycles',
+                      style: AmagamaTypography.bodyStyle.copyWith(
+                        color: AmagamaColors.textPrimary,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ============================================================
             // 🔴 RESET ALL PROGRESS
+            // ============================================================
+            const SettingsSectionHeader(title: 'Maintenance'),
+
             SettingsTile(
               icon: Icons.delete_forever,
               label: 'Reset all progress',
@@ -68,7 +148,9 @@ class GrownupsScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // 🟢 CHANGE PARENTAL PIN (uses shared keypad + dots UI)
+            // ============================================================
+            // 🟢 CHANGE PARENTAL PIN
+            // ============================================================
             SettingsTile(
               icon: Icons.lock_reset,
               label: 'Change parental PIN',
@@ -105,7 +187,6 @@ class GrownupsScreen extends StatelessWidget {
                 );
 
                 if (newPin == null) return;
-
                 await pinService.setPin(newPin);
 
                 ScaffoldMessenger.of(context).showSnackBar(

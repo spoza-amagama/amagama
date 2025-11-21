@@ -1,4 +1,4 @@
-// 📄 lib/models/progress.dart
+// 📄 lib/models/sentence_progress.dart
 //
 // Per-sentence progress model including trophies.
 //

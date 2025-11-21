@@ -1,14 +1,11 @@
 // 📄 lib/services/round_service.dart
 //
 // RoundService — coordinates what happens when a round is complete:
-// - update per-sentence cycles
-// - award global trophies
-// - save progress
-// - unlock the next sentence
-// - rebuild deck for the new/current sentence
-//
-// This mirrors the original _onRoundComplete logic from GameController,
-// but depends on other services instead of owning all state directly.
+// - increment cyclesCompleted
+// - award trophies when reaching cyclesTarget
+// - unlock next sentence when mastered
+// - rebuild deck
+// ---------------------------------------------------------------------------
 
 import 'package:amagama/data/index.dart';
 import 'package:amagama/services/audio_notifier.dart';
@@ -48,48 +45,41 @@ class RoundService {
   }
 
   Future<void> handleRoundComplete() async {
-    if (!_bound) {
-      // Not configured yet; nothing to do.
-      return;
+    if (!_bound) return;
+
+    // Only complete when all cards are matched.
+    if (_deck.deck.any((c) => !c.isMatched)) return;
+
+    final int idx = _sentences.currentSentence;
+    final sentence = sentences[idx];
+    final int sentenceId = sentence.id;
+    final int target = _cycles.cyclesTarget;
+
+    final before = _progress.bySentenceId(sentenceId);
+    final beforeCycles = before.cyclesCompleted;
+
+    // Increment cyclesCompleted.
+    await _progress.recordSuccess(sentenceId);
+    final after = _progress.bySentenceId(sentenceId);
+    final afterCycles = after.cyclesCompleted;
+
+    // Award trophies based on thresholds.
+    await _trophies.awardForSentenceMastery();
+
+    // Check if this sentence has just reached mastery.
+    final bool mastered =
+        beforeCycles < target && afterCycles >= target;
+
+    // Celebrate & unlock next sentence.
+    if (mastered) {
+      await _audio.playTrophy(afterCycles);
+
+      if (idx < sentences.length - 1) {
+        await _sentences.setCurrent(idx + 1);
+      }
     }
 
-    if (_deck.deck.any((c) => !c.isMatched)) {
-      return;
-    }
-
-    final currentIndex = _sentences.currentSentence;
-    final sentenceId = sentences[currentIndex].id;
-    final idx =
-        _progress.all.indexWhere((p) => p.sentenceId == sentenceId);
-    if (idx == -1) return;
-
-    final old = _progress.all[idx];
-    final newCycles =
-        (old.cyclesCompleted + 1).clamp(0, _cycles.cyclesTarget);
-
-    await _audio.playTrophy(newCycles);
-
-    await _trophies.applyAwards(
-      newCycles: newCycles,
-      oldProgress: old,
-      cyclesTarget: _cycles.cyclesTarget,
-    );
-
-    final updated = old.copyWith(
-      cyclesCompleted: newCycles,
-      trophyBronze: old.trophyBronze || newCycles >= 2,
-      trophySilver: old.trophySilver || newCycles >= 4,
-      trophyGold: old.trophyGold || newCycles >= _cycles.cyclesTarget,
-    );
-
-    _progress.updateAtIndex(idx, updated);
-    await _progress.save();
-
-    if (newCycles >= _cycles.cyclesTarget &&
-        currentIndex < sentences.length - 1) {
-      await _sentences.setCurrent(currentIndex + 1);
-    }
-
+    // Always rebuild the deck for the (possibly new) sentence.
     _deck.resetForSentence(_sentences.currentSentence);
   }
 }

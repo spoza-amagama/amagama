@@ -1,11 +1,11 @@
 // 📄 lib/screens/home_screen.dart
 //
-// 🏡 Home Screen — stable vertical layout, no double scrolling
+// 🏡 Home Screen — simplified, week-free version
 // ------------------------------------------------------------
-// • Header stays fixed
-// • HomeContent scrolls internally (if needed)
-// • Avoids overflow on small devices
-// • Matches new Amagama UI patterns
+// • Fixed header (shows logo + title)
+// • Body driven entirely by HomeContent
+// • No week selection, no progress by week
+// • Clean vertical layout, fully responsive
 // ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
@@ -28,7 +28,11 @@ class HomeScreen extends StatelessWidget {
               showLogo: true,
             ),
 
-            // HomeContent manages its own scroll behavior.
+            // HomeContent is responsible for:
+            // • showing the current sentence
+            // • progress / badges (sentence-based, not week-based)
+            // • play button
+            // • optional parents button
             Expanded(
               child: HomeContent(),
             ),

@@ -1,12 +1,9 @@
 // 📄 lib/screens/loading_screen.dart
-// ⏳ Initial bootstrap screen — loads GameController then routes to Home.
+// LoadingScreen — performs async startup tasks then navigates to Home.
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/routes/index.dart';
-import 'package:amagama/theme/index.dart';
+import 'package:amagama/services/audio/audio_service.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -16,33 +13,27 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
-  bool _started = false;
-
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_started) return;
-    _started = true;
-    _bootstrap();
+  void initState() {
+    super.initState();
+    _init();
   }
 
-  Future<void> _bootstrap() async {
-    final game = context.read<GameController>();
-
-    await game.init();
+  Future<void> _init() async {
+    // Preload audio or any other startup services
+    await AudioService().preloadAll();
 
     if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+
+    // Navigate to home when ready
+    Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: AmagamaColors.background,
       body: Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AmagamaColors.accent),
-        ),
+        child: CircularProgressIndicator(),
       ),
     );
   }

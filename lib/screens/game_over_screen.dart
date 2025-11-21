@@ -1,5 +1,11 @@
 // 📄 lib/screens/game_over_screen.dart
 // 🎉 Amagama — Game Over / Celebration Screen
+//
+// Updated to match new ProgressService:
+// - No countCompleted()
+// - No totalCycles()
+// - No week references
+// --------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -23,16 +29,20 @@ class GameOverScreen extends StatelessWidget {
     final cyclesTarget = game.cycles.cyclesTarget;
 
     final currentSentence = game.sentences.byIndex(currentIdx);
+    final currentProgress =
+        game.progress.bySentenceId(currentSentence.id);
 
-    // FIX: ID must be int, not String
-    final currentProgress = game.progress.bySentenceId(currentSentence.id);
+    // NEW: derive totals from progress list
+    final completedSentences = game.progress.all
+        .where((p) => p.cyclesCompleted >= cyclesTarget)
+        .length;
 
-    final completedSentences = game.progress.countCompleted(cyclesTarget);
-    final totalCycles = game.progress.totalCycles();
+    final totalCycles = game.progress.all
+        .fold<int>(0, (sum, p) => sum + p.cyclesCompleted);
 
-    final bronze = game.trophies.bronze;
-    final silver = game.trophies.silver;
-    final gold = game.trophies.gold;
+    final bronze = game.trophies.bronzeTotal;
+    final silver = game.trophies.silverTotal;
+    final gold = game.trophies.goldTotal;
 
     return Scaffold(
       backgroundColor: AmagamaColors.background,
@@ -57,7 +67,7 @@ class GameOverScreen extends StatelessWidget {
 
             const GameOverHeader(
               title: 'Great Job!',
-              subtitle: 'You finished the week!',
+              subtitle: 'Sentence complete!',
             ),
 
             const SizedBox(height: AmagamaSpacing.md),

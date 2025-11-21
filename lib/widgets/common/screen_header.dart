@@ -1,6 +1,12 @@
-// 📄 lib/widgets/common/index.dart
+// 📄 lib/widgets/common/screen_header.dart
 //
-// Reusable top-of-screen header with optional subtitle and progress info.
+// ScreenHeader — top-of-screen reusable header with:
+// • title
+// • optional subtitle
+// • sentence number (X / Y)
+// • cycles progress (X / Y)
+// • optional leading/back button
+// ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
@@ -31,6 +37,12 @@ class ScreenHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showSentenceInfo =
+        sentenceNumber != null && totalSentences != null;
+
+    final showCycleInfo =
+        cyclesDone != null && cyclesTarget != null && cyclesTarget! > 0;
+
     return Padding(
       padding: const EdgeInsets.all(AmagamaSpacing.md),
       child: Column(
@@ -40,6 +52,7 @@ class ScreenHeader extends StatelessWidget {
             children: [
               if (leadingAction != null) leadingAction!,
               if (leadingAction != null) const SizedBox(width: 8),
+
               Text(
                 title,
                 style: AmagamaTypography.titleStyle.copyWith(
@@ -47,13 +60,16 @@ class ScreenHeader extends StatelessWidget {
                   color: AmagamaColors.textPrimary,
                 ),
               ),
+
               if (showLogo) ...[
                 const SizedBox(width: 8),
                 const Icon(Icons.auto_awesome, color: Colors.amber),
               ],
+
               const Spacer(),
             ],
           ),
+
           if (subtitle != null) ...[
             const SizedBox(height: 4),
             Text(
@@ -63,25 +79,32 @@ class ScreenHeader extends StatelessWidget {
               ),
             ),
           ],
-          if (sentenceNumber != null && totalSentences != null) ...[
-            const SizedBox(height: 4),
+
+          if (showSentenceInfo) ...[
+            const SizedBox(height: 6),
             Text(
               'Sentence $sentenceNumber of $totalSentences',
               style: AmagamaTypography.bodyStyle.copyWith(
-                color: AmagamaColors.textSecondary.withValues(alpha: 0.9),
+                color: AmagamaColors.textSecondary.withAlpha(230),
                 fontSize: 13,
               ),
             ),
           ],
-          if (cyclesDone != null && cyclesTarget != null) ...[
-            const SizedBox(height: 6),
+
+          if (showCycleInfo) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Cycles: ${cyclesDone!} / ${cyclesTarget!}',
+              style: AmagamaTypography.bodyStyle.copyWith(
+                color: AmagamaColors.textSecondary.withAlpha(230),
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 4),
             LinearProgressIndicator(
-              value: cyclesTarget == 0
-                  ? 0
-                  : (cyclesDone! / cyclesTarget!).clamp(0.0, 1.0),
+              value: (cyclesDone! / cyclesTarget!).clamp(0.0, 1.0),
               minHeight: 6,
-              backgroundColor:
-                  AmagamaColors.surface.withValues(alpha: 0.5),
+              backgroundColor: AmagamaColors.surface.withAlpha(130),
               color: AmagamaColors.secondary,
             ),
           ],
