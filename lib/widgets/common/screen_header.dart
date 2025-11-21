@@ -1,44 +1,21 @@
-// 📄 lib/widgets/common/screen_header.dart
+// 📄 lib/widgets/common/index.dart
 //
-// 🧱 ScreenHeader — shared top-of-screen header.
-//
-// Used by:
-// • HomeScreen  (title + logo only)
-// • PlayScreen  (title + subtitle + cycles + sentence meta + back button)
-// • SettingsScreen / ProgressScreen (title + optional back button)
-//
-// API is intentionally flexible so screens can pass only what they need.
+// Reusable top-of-screen header with optional subtitle and progress info.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
 
 class ScreenHeader extends StatelessWidget {
-  /// Main title, e.g. "Amagama", "Play", "Settings"
   final String title;
-
-  /// Whether to show the small app logo badge on the right.
   final bool showLogo;
-
-  /// Optional subtitle (used on Play to show the current sentence text).
   final String? subtitle;
 
-  /// Optional cycles done for the current sentence.
   final int? cyclesDone;
-
-  /// Optional cycles target for the current sentence.
   final int? cyclesTarget;
-
-  /// Optional current sentence number (1-based).
   final int? sentenceNumber;
-
-  /// Optional total number of sentences.
   final int? totalSentences;
 
-  /// Optional leading widget (typically a back button).
   final Widget? leadingAction;
-
-  /// Optional trailing widgets (e.g. actions).
-  final List<Widget>? trailingActions;
 
   const ScreenHeader({
     super.key,
@@ -50,12 +27,7 @@ class ScreenHeader extends StatelessWidget {
     this.sentenceNumber,
     this.totalSentences,
     this.leadingAction,
-    this.trailingActions,
   });
-
-  bool get _hasMetaRow =>
-      (cyclesDone != null && cyclesTarget != null) ||
-      (sentenceNumber != null && totalSentences != null);
 
   @override
   Widget build(BuildContext context) {
@@ -64,138 +36,56 @@ class ScreenHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildTopRow(context),
+          Row(
+            children: [
+              if (leadingAction != null) leadingAction!,
+              if (leadingAction != null) const SizedBox(width: 8),
+              Text(
+                title,
+                style: AmagamaTypography.titleStyle.copyWith(
+                  fontSize: 26,
+                  color: AmagamaColors.textPrimary,
+                ),
+              ),
+              if (showLogo) ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.auto_awesome, color: Colors.amber),
+              ],
+              const Spacer(),
+            ],
+          ),
           if (subtitle != null) ...[
-            const SizedBox(height: AmagamaSpacing.xs),
-            _buildSubtitle(context),
+            const SizedBox(height: 4),
+            Text(
+              subtitle!,
+              style: AmagamaTypography.bodyStyle.copyWith(
+                color: AmagamaColors.textSecondary,
+              ),
+            ),
           ],
-          if (_hasMetaRow) ...[
-            const SizedBox(height: AmagamaSpacing.xs),
-            _buildMetaRow(context),
+          if (sentenceNumber != null && totalSentences != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Sentence $sentenceNumber of $totalSentences',
+              style: AmagamaTypography.bodyStyle.copyWith(
+                color: AmagamaColors.textSecondary.withValues(alpha: 0.9),
+                fontSize: 13,
+              ),
+            ),
+          ],
+          if (cyclesDone != null && cyclesTarget != null) ...[
+            const SizedBox(height: 6),
+            LinearProgressIndicator(
+              value: cyclesTarget == 0
+                  ? 0
+                  : (cyclesDone! / cyclesTarget!).clamp(0.0, 1.0),
+              minHeight: 6,
+              backgroundColor:
+                  AmagamaColors.surface.withValues(alpha: 0.5),
+              color: AmagamaColors.secondary,
+            ),
           ],
         ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // TOP ROW — leading, title, logo / trailing
-  // ─────────────────────────────────────────────────────────────
-  Widget _buildTopRow(BuildContext context) {
-    return Row(
-      children: [
-        if (leadingAction != null) ...[
-          leadingAction!,
-          const SizedBox(width: AmagamaSpacing.sm),
-        ],
-        Expanded(
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AmagamaTypography.titleStyle.copyWith(
-              fontSize: 28,
-              color: AmagamaColors.textPrimary,
-            ),
-          ),
-        ),
-        if (trailingActions != null) ...trailingActions!,
-        if (showLogo) ...[
-          const SizedBox(width: AmagamaSpacing.sm),
-          _LogoBadge(),
-        ],
-      ],
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // SUBTITLE — usually current sentence text on Play screen
-  // ─────────────────────────────────────────────────────────────
-  Widget _buildSubtitle(BuildContext context) {
-    return Text(
-      subtitle!,
-      textAlign: TextAlign.left,
-      style: AmagamaTypography.bodyStyle.copyWith(
-        fontSize: 16,
-        color: AmagamaColors.textSecondary,
-        height: 1.3,
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // META ROW — cycles + sentence position (if provided)
-  // ─────────────────────────────────────────────────────────────
-  Widget _buildMetaRow(BuildContext context) {
-    final showCycles = cyclesDone != null && cyclesTarget != null;
-    final showSentence = sentenceNumber != null && totalSentences != null;
-
-    return Row(
-      children: [
-        if (showCycles) ...[
-          Icon(
-            Icons.school_rounded,
-            size: 18,
-            color: AmagamaColors.textSecondary.withValues(alpha: 0.9),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '${cyclesDone!} / ${cyclesTarget!} cycles',
-            style: AmagamaTypography.bodyStyle.copyWith(
-              fontSize: 14,
-              color: AmagamaColors.textSecondary,
-            ),
-          ),
-        ],
-        if (showCycles && showSentence) const SizedBox(width: 12),
-        if (showSentence) ...[
-          Icon(
-            Icons.menu_book_rounded,
-            size: 18,
-            color: AmagamaColors.textSecondary.withValues(alpha: 0.9),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            'Sentence $sentenceNumber of $totalSentences',
-            style: AmagamaTypography.bodyStyle.copyWith(
-              fontSize: 14,
-              color: AmagamaColors.textSecondary,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-// Small inline logo badge shown when [showLogo] is true.
-// ─────────────────────────────────────────────────────────────
-
-class _LogoBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 34,
-      height: 34,
-      decoration: BoxDecoration(
-        color: AmagamaColors.secondary,
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: AmagamaColors.textPrimary.withValues(alpha: 0.16),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        'A',
-        style: AmagamaTypography.titleStyle.copyWith(
-          fontSize: 20,
-          color: Colors.white,
-        ),
       ),
     );
   }

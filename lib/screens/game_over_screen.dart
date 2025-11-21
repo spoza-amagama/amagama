@@ -4,14 +4,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../widgets/common/screen_header.dart';
+import '../widgets/common/index.dart';
 import '../widgets/game_over/game_over_header.dart';
 import '../widgets/game_over/game_over_stats_card.dart';
 import '../widgets/game_over/game_over_actions.dart';
-
 import '../state/game_controller.dart';
 import '../theme/index.dart';
-import '../data/index.dart';
 
 class GameOverScreen extends StatelessWidget {
   const GameOverScreen({super.key});
@@ -20,39 +18,34 @@ class GameOverScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
 
-    // ⭐ Sentence + progress state
-    final int idx = game.sentences.currentSentence;
-    final sentence = sentences[idx];
-    final prog = game.progress.bySentenceId(sentence.id);
+    final currentIdx = game.sentences.currentSentence;
+    final totalSentences = game.sentences.total;
+    final cyclesTarget = game.cycles.cyclesTarget;
 
-    // Trophy totals
-    final trophies = game.trophies;
-    final bronze = trophies.bronzeTotal;
-    final silver = trophies.silverTotal;
-    final gold = trophies.goldTotal;
+    final currentSentence = game.sentences.byIndex(currentIdx);
 
-    // Global stats
-    final int totalSentences = sentences.length;
-    final int completedSentences = game.progress.countCompleted(
-      cyclesTarget: game.cycles.cyclesTarget,
-    );
-    final int totalCycles = game.progress.totalCycles();
+    // FIX: ID must be int, not String
+    final currentProgress = game.progress.bySentenceId(currentSentence.id);
+
+    final completedSentences = game.progress.countCompleted(cyclesTarget);
+    final totalCycles = game.progress.totalCycles();
+
+    final bronze = game.trophies.bronze;
+    final silver = game.trophies.silver;
+    final gold = game.trophies.gold;
 
     return Scaffold(
       backgroundColor: AmagamaColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // ───────────────────────────────────────────────
-            // Screen header
-            // ───────────────────────────────────────────────
             ScreenHeader(
-              title: "Well done!",
+              title: 'Well done!',
               subtitle: "You've completed this sentence!",
               showLogo: true,
-              cyclesDone: prog.cyclesCompleted,
-              cyclesTarget: game.cycles.cyclesTarget,
-              sentenceNumber: idx + 1,
+              cyclesDone: currentProgress.cyclesCompleted,
+              cyclesTarget: cyclesTarget,
+              sentenceNumber: currentIdx + 1,
               totalSentences: totalSentences,
               leadingAction: IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -60,21 +53,15 @@ class GameOverScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: AmagamaSpacing.md),
-
-            // ───────────────────────────────────────────────
-            // Celebration header
-            // ───────────────────────────────────────────────
-            GameOverHeader(
-              title: "Great work!",
-              subtitle: "You're getting better every round.",
-            ),
-
             const SizedBox(height: AmagamaSpacing.lg),
 
-            // ───────────────────────────────────────────────
-            // Stats card
-            // ───────────────────────────────────────────────
+            const GameOverHeader(
+              title: 'Great Job!',
+              subtitle: 'You finished the week!',
+            ),
+
+            const SizedBox(height: AmagamaSpacing.md),
+
             GameOverStatsCard(
               totalSentences: totalSentences,
               completedSentences: completedSentences,
@@ -85,12 +72,7 @@ class GameOverScreen extends StatelessWidget {
             ),
 
             const Spacer(),
-
-            // ───────────────────────────────────────────────
-            // Actions
-            // ───────────────────────────────────────────────
             const GameOverActions(),
-
             const SizedBox(height: AmagamaSpacing.lg),
           ],
         ),

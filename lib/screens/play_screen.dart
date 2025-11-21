@@ -4,12 +4,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../widgets/common/screen_header.dart';
+import '../widgets/common/index.dart';
 import '../widgets/play/game_play_area.dart';
 import '../widgets/play/play_footer.dart';
-import '../widgets/common/gold_confetti_overlay.dart';
 
-import '../data/index.dart';
 import '../state/game_controller.dart';
 import '../services/audio/audio_service.dart';
 import '../theme/index.dart';
@@ -36,13 +34,13 @@ class _PlayScreenState extends State<PlayScreen>
 
     // New: sentence index from SentenceService
     final int idx = game.sentences.currentSentence;
-    final s = sentences[idx];
+    final sentence = game.sentences.byIndex(idx);
 
-    // Sentence id for footer sentence playback
-    _sentenceId.value = s.id;
+    // Sentence id for footer sentence playback (ensure String)
+    _sentenceId.value = sentence.id.toString();
 
-    // Progress for this sentence via ProgressService
-    final sentenceProgress = game.progress.bySentenceId(s.id);
+    // Corrected: Progress lookup now uses int
+    final sentenceProgress = game.progress.bySentenceId(sentence.id);
 
     return Scaffold(
       backgroundColor: AmagamaColors.background,
@@ -55,11 +53,11 @@ class _PlayScreenState extends State<PlayScreen>
               ScreenHeader(
                 title: 'Play',
                 showLogo: false,
-                subtitle: s.text,
+                subtitle: sentence.text,
                 cyclesDone: sentenceProgress.cyclesCompleted,
                 cyclesTarget: game.cycles.cyclesTarget,
                 sentenceNumber: idx + 1,
-                totalSentences: sentences.length,
+                totalSentences: game.sentences.total,
                 leadingAction: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => Navigator.pop(context),
@@ -77,7 +75,6 @@ class _PlayScreenState extends State<PlayScreen>
                       (_) => _playWord.value = false,
                     );
                   },
-                  // Legacy hook – safe to keep for now; you can no-op it later
                   onComplete: (_) {},
                 ),
               ),

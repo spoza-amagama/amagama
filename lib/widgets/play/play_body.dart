@@ -42,7 +42,6 @@ class PlayBody extends StatelessWidget {
     final sentenceIndex = game.sentences.currentSentence;
 
     return AnimatedMatchGrid(
-      sentenceIndex: sentenceIndex,
       cards: cards,
       fadeOut: fadeOut,
       onCardTap: (card) async {
@@ -55,7 +54,7 @@ class PlayBody extends StatelessWidget {
         // Let RoundService handle completion + progression
         await game.rounds.handleRoundComplete();
 
-        // Legacy hook: safe to call each round
+        // Legacy hook
         onComplete(sentenceIndex);
       },
     );

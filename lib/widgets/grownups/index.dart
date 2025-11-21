@@ -7,7 +7,6 @@
 // ───────────────────────────────────────────────
 // Dialogs
 // ───────────────────────────────────────────────
-export 'confirm_dialog.dart';
 export 'grownup_menu_dialog.dart';
 export 'set_cycles_dialog.dart';
 

@@ -23,13 +23,13 @@ class GameOverActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Provide sensible defaults if callbacks are not supplied.
+    // Provide sensible defaults if no callbacks are passed.
+    final playAgain = onPlayAgain ??
+        () => Navigator.of(context).pushReplacementNamed(AppRoutes.play);
+
     final goHome = onHome ??
         () => Navigator.of(context)
             .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
-
-    final playAgain = onPlayAgain ??
-        () => Navigator.of(context).pushReplacementNamed(AppRoutes.play);
 
     final viewProgress = onViewProgress ??
         () => Navigator.of(context).pushNamed(AppRoutes.progress);
@@ -38,6 +38,7 @@ class GameOverActions extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
       child: Column(
         children: [
+          // ▶ Play Again
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -45,12 +46,15 @@ class GameOverActions extends StatelessWidget {
               onPressed: playAgain,
               style: AmagamaButtons.primary.copyWith(
                 minimumSize:
-                    WidgetStateProperty.all(const Size.fromHeight(48)),
+                    const WidgetStatePropertyAll(Size.fromHeight(48)),
               ),
               label: const Text('Play again'),
             ),
           ),
+
           const SizedBox(height: 10),
+
+          // 🏡 Back to home
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -58,12 +62,15 @@ class GameOverActions extends StatelessWidget {
               onPressed: goHome,
               style: AmagamaButtons.secondary.copyWith(
                 minimumSize:
-                    WidgetStateProperty.all(const Size.fromHeight(46)),
+                    const WidgetStatePropertyAll(Size.fromHeight(46)),
               ),
               label: const Text('Back to home'),
             ),
           ),
+
           const SizedBox(height: 10),
+
+          // 📈 View progress
           TextButton.icon(
             onPressed: viewProgress,
             icon: const Icon(Icons.bar_chart_rounded),

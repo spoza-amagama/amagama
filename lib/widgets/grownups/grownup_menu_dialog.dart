@@ -1,9 +1,14 @@
 // 📄 lib/widgets/grownups/grownup_menu_dialog.dart
+//
+// GrownupMenuDialog — admin/settings popup for parents.
+// Includes cycle settings, reset actions, and PIN reset.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/theme/index.dart';
-import 'confirm_dialog.dart';
+import 'package:amagama/widgets/common/index.dart'; // <-- updated: unified ConfirmDialog
 import 'set_cycles_dialog.dart';
 import 'settings_tile.dart';
 
@@ -40,6 +45,7 @@ class GrownupMenuDialog extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
+            // Set cycles
             SettingsTile(
               icon: Icons.repeat_rounded,
               label: "Set cycles per sentence",
@@ -55,6 +61,7 @@ class GrownupMenuDialog extends StatelessWidget {
 
             const SizedBox(height: 12),
 
+            // Reset progress
             SettingsTile(
               icon: Icons.restart_alt_rounded,
               label: "Reset all progress",
@@ -68,6 +75,7 @@ class GrownupMenuDialog extends StatelessWidget {
                     message:
                         "This will erase all trophies, cycles and sentence progress.",
                     confirmLabel: "Reset",
+                    destructive: true, // 🔥 dangerous action
                     onConfirm: () => game.resetAll(),
                   ),
                 );
@@ -76,6 +84,7 @@ class GrownupMenuDialog extends StatelessWidget {
 
             const SizedBox(height: 12),
 
+            // Reset PIN
             SettingsTile(
               icon: Icons.lock_reset_rounded,
               label: "Reset parental PIN",
@@ -89,6 +98,7 @@ class GrownupMenuDialog extends StatelessWidget {
                     message:
                         "This will clear the parental PIN. You will create a new PIN next time.",
                     confirmLabel: "Reset PIN",
+                    destructive: true, // 🔥 also destructive
                     onConfirm: () => game.pin.reset(),
                   ),
                 );

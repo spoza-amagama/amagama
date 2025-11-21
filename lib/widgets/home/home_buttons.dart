@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/theme/index.dart';
-import 'package:amagama/widgets/grownups/confirm_dialog.dart';
+import 'package:amagama/widgets/common/index.dart'; // <-- updated: unified ConfirmDialog
 
 class HomeButtons extends StatelessWidget {
   const HomeButtons({super.key});
@@ -35,6 +35,7 @@ class HomeButtons extends StatelessWidget {
                 message:
                     'This will erase all trophies, cycles and sentence progress.',
                 confirmLabel: 'Reset',
+                destructive: true, // 🔥 matches action intent
                 onConfirm: () async {
                   await context.read<GameController>().resetAll();
                 },

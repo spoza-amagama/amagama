@@ -1,6 +1,4 @@
 // 📄 lib/widgets/home/home_header.dart
-//
-// 🧩 HomeHeader — top section of the Home Screen.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/state/game_controller.dart';
@@ -19,6 +17,7 @@ class HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final idx = game.sentences.currentSentence;
+    final total = game.sentences.total;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -34,17 +33,14 @@ class HomeHeader extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              'Sentence ${idx + 1}/${game.sentences.total}',
+              'Sentence ${idx + 1}/$total',
               style: AmagamaTypography.bodyStyle.copyWith(
                 color: AmagamaColors.textSecondary,
               ),
             ),
           ],
         ),
-
         const SizedBox(height: AmagamaSpacing.sm),
-
-        // Award summary
         const HomeTrophies(),
       ],
     );

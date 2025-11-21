@@ -1,27 +1,21 @@
-// 📄 lib/widgets/common/gold_confetti_overlay.dart
+// 📄 lib/widgets/common/index.dart
 //
-// 🎉 GoldConfettiOverlay — lightweight celebratory overlay.
-//
-// Usage:
-//   GoldConfettiOverlay(
-//     trigger: game.trophies.justUnlockedGold,
-//     child: YourScreenBody(),
-//   )
-//
-// Shows a brief golden confetti shimmer over the screen when [trigger] is
-// true. Designed to be cheap and not depend on GameController directly.
+// GoldConfettiOverlay — wraps a child and shows a short confetti burst
+// when [trigger] is true. Stateless for callers; internally manages
+// a one-shot animation.
 
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
 
 class GoldConfettiOverlay extends StatefulWidget {
-  final bool trigger;
   final Widget child;
+  final bool trigger;
 
   const GoldConfettiOverlay({
     super.key,
-    required this.trigger,
     required this.child,
+    required this.trigger,
   });
 
   @override
@@ -30,63 +24,82 @@ class GoldConfettiOverlay extends StatefulWidget {
 
 class _GoldConfettiOverlayState extends State<GoldConfettiOverlay>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _opacity;
-  bool _show = false;
+  late final AnimationController _ctrl;
+  late final Animation<double> _progress;
+  bool _active = false;
+  final Random _rand = Random();
+  late final List<_ConfettiPiece> _pieces;
+
+  static const _count = 80;
 
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
+    _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 1200),
+    );
+    _progress = CurvedAnimation(
+      parent: _ctrl,
+      curve: Curves.easeOutCubic,
     );
 
-    _opacity = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
+    _pieces = List.generate(
+      _count,
+      (i) => _ConfettiPiece(
+        dx: _rand.nextDouble(),
+        dyStart: _rand.nextDouble() * -0.2,
+        length: 0.4 + _rand.nextDouble() * 0.4,
+        size: 4 + _rand.nextDouble() * 4,
+        tilt: (_rand.nextDouble() - 0.5) * 0.6,
+      ),
     );
   }
 
   @override
   void didUpdateWidget(covariant GoldConfettiOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // Start a one-shot animation whenever trigger flips from false -> true.
-    if (!oldWidget.trigger && widget.trigger) {
-      _playOnce();
+    if (widget.trigger && !oldWidget.trigger) {
+      _start();
     }
   }
 
-  Future<void> _playOnce() async {
-    setState(() => _show = true);
-    await _controller.forward(from: 0);
-    if (mounted) {
-      setState(() => _show = false);
-    }
+  void _start() {
+    setState(() => _active = true);
+    _ctrl
+      ..stop()
+      ..forward(from: 0).whenComplete(() {
+        if (mounted) {
+          setState(() => _active = false);
+        }
+      });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_show) return widget.child;
+    if (!_active) return widget.child;
 
     return Stack(
+      fit: StackFit.expand,
       children: [
         widget.child,
-        Positioned.fill(
-          child: IgnorePointer(
-            ignoring: true,
-            child: FadeTransition(
-              opacity: _opacity,
-              child: _ConfettiLayer(),
-            ),
+        IgnorePointer(
+          child: AnimatedBuilder(
+            animation: _progress,
+            builder: (context, _) {
+              return CustomPaint(
+                painter: _GoldConfettiPainter(
+                  progress: _progress.value,
+                  pieces: _pieces,
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -94,82 +107,72 @@ class _GoldConfettiOverlayState extends State<GoldConfettiOverlay>
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Simple decorative confetti layer (no external deps).
-// ─────────────────────────────────────────────────────────────
+class _ConfettiPiece {
+  final double dx;
+  final double dyStart;
+  final double length;
+  final double size;
+  final double tilt;
 
-class _ConfettiLayer extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final gold = AmagamaColors.warning;
-    final accent = AmagamaColors.accent;
-    final softOverlay =
-        AmagamaColors.textPrimary.withValues(alpha: 0.12);
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            softOverlay,
-            Colors.transparent,
-            softOverlay,
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: CustomPaint(
-        painter: _ConfettiPainter(
-          primary: gold,
-          secondary: accent,
-        ),
-      ),
-    );
-  }
+  const _ConfettiPiece({
+    required this.dx,
+    required this.dyStart,
+    required this.length,
+    required this.size,
+    required this.tilt,
+  });
 }
 
-class _ConfettiPainter extends CustomPainter {
-  final Color primary;
-  final Color secondary;
+class _GoldConfettiPainter extends CustomPainter {
+  final double progress;
+  final List<_ConfettiPiece> pieces;
 
-  _ConfettiPainter({
-    required this.primary,
-    required this.secondary,
+  _GoldConfettiPainter({
+    required this.progress,
+    required this.pieces,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paintPrimary = Paint()
-      ..color = primary
-      ..style = PaintingStyle.fill;
-
-    final paintSecondary = Paint()
-      ..color = secondary
-      ..style = PaintingStyle.fill;
-
-    // A few simple "confetti" dots / rectangles spread around.
-    final dots = <Offset>[
-      Offset(size.width * 0.2, size.height * 0.2),
-      Offset(size.width * 0.8, size.height * 0.25),
-      Offset(size.width * 0.3, size.height * 0.4),
-      Offset(size.width * 0.6, size.height * 0.6),
-      Offset(size.width * 0.15, size.height * 0.7),
-      Offset(size.width * 0.85, size.height * 0.75),
+    final baseColors = [
+      AmagamaColors.warning,
+      AmagamaColors.secondary,
+      AmagamaColors.accent.withValues(alpha: 0.9),
     ];
 
-    for (var i = 0; i < dots.length; i++) {
-      final paint = i.isEven ? paintPrimary : paintSecondary;
+    for (var i = 0; i < pieces.length; i++) {
+      final p = pieces[i];
+      final color = baseColors[i % baseColors.length]
+          .withValues(alpha: (1 - progress).clamp(0.0, 1.0));
+
+      final dx = p.dx * size.width;
+      final dy = (p.dyStart + p.length * progress) * size.height;
+
       final rect = Rect.fromCenter(
-        center: dots[i],
-        width: 10,
-        height: 4,
+        center: Offset(dx, dy),
+        width: p.size,
+        height: p.size * 2,
       );
+
+      final r = Rect.fromCenter(
+        center: rect.center,
+        width: rect.width,
+        height: rect.height,
+      );
+
+      final paint = Paint()..color = color;
       canvas.save();
-      canvas.translate(dots[i].dx, dots[i].dy);
-      canvas.rotate(0.4 * (i.isEven ? 1 : -1));
-      canvas.translate(-dots[i].dx, -dots[i].dy);
+      canvas.translate(r.center.dx, r.center.dy);
+      canvas.rotate(p.tilt + progress * pi * 2);
       canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, const Radius.circular(2)),
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: r.width,
+            height: r.height,
+          ),
+          const Radius.circular(2),
+        ),
         paint,
       );
       canvas.restore();
@@ -177,8 +180,6 @@ class _ConfettiPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ConfettiPainter oldDelegate) {
-    return oldDelegate.primary != primary ||
-        oldDelegate.secondary != secondary;
-  }
+  bool shouldRepaint(covariant _GoldConfettiPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.pieces != pieces;
 }

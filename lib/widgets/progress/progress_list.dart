@@ -1,13 +1,12 @@
 // 📄 lib/widgets/progress/progress_list.dart
 //
-// 📊 ProgressList — shows progress for each sentence.
-// Compatible with new GameController service API.
+// Simple progress list using GameController services.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:amagama/theme/index.dart';
 import 'package:amagama/state/game_controller.dart';
+import 'package:amagama/theme/index.dart';
 import 'package:amagama/data/index.dart';
 
 class ProgressList extends StatelessWidget {
@@ -23,27 +22,16 @@ class ProgressList extends StatelessWidget {
       itemBuilder: (context, index) {
         final sentence = sentences[index];
 
-        // New ProgressService API
+        // FIX: ID must be int, not String
         final prog = game.progress.bySentenceId(sentence.id);
-        final cyclesDone = prog.cyclesCompleted;
 
+        final cycles = prog.cyclesCompleted;
         final target = game.cycles.cyclesTarget;
 
         return Card(
-          color: AmagamaColors.surface,
           child: ListTile(
-            title: Text(
-              sentence.text,
-              style: AmagamaTypography.bodyStyle.copyWith(
-                color: AmagamaColors.textPrimary,
-              ),
-            ),
-            subtitle: Text(
-              'Cycles: $cyclesDone of $target',
-              style: AmagamaTypography.bodyStyle.copyWith(
-                color: AmagamaColors.textSecondary,
-              ),
-            ),
+            title: Text(sentence.text),
+            subtitle: Text('Cycles: $cycles of $target'),
           ),
         );
       },

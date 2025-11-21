@@ -1,4 +1,6 @@
 // 📄 lib/screens/loading_screen.dart
+// ⏳ Initial bootstrap screen — loads GameController then routes to Home.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,7 +23,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-
     _bootstrap();
   }
 
@@ -40,8 +41,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
       backgroundColor: AmagamaColors.background,
       body: Center(
         child: CircularProgressIndicator(
-          valueColor:
-              AlwaysStoppedAnimation<Color>(AmagamaColors.accent),
+          valueColor: AlwaysStoppedAnimation<Color>(AmagamaColors.accent),
         ),
       ),
     );

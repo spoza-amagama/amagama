@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'state/index.dart';
-import 'controllers/card_grid_controller.dart';
 import 'services/audio/audio_service.dart';
 import 'routes/index.dart';
 import 'theme/index.dart';
@@ -23,7 +22,6 @@ class AmagamaApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => GameController()),
         ChangeNotifierProvider(create: (_) => AudioControllerProvider()),
-        ChangeNotifierProvider(create: (_) => CardGridController()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

@@ -10,7 +10,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
-import 'package:amagama/widgets/common/screen_header.dart';
+import 'package:amagama/widgets/common/index.dart';
 import 'package:amagama/widgets/home/home_content.dart';
 
 class HomeScreen extends StatelessWidget {

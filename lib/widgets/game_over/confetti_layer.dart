@@ -18,7 +18,6 @@ class ConfettiLayer extends StatelessWidget {
     return Stack(
       children: [
         child,
-        // Very light, static "confetti" dots in the background.
         IgnorePointer(
           child: CustomPaint(
             painter: _ConfettiPainter(),
@@ -51,7 +50,7 @@ class _ConfettiPainter extends CustomPainter {
     ];
 
     for (var i = 0; i < randomOffsets.length; i++) {
-      paint.color = colors[i % colors.length].withOpacity(0.35);
+      paint.color = colors[i % colors.length].withValues(alpha: 0.35);
       canvas.drawCircle(randomOffsets[i], 6, paint);
     }
   }

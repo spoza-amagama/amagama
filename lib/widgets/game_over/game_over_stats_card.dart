@@ -1,22 +1,15 @@
 // 📄 lib/widgets/game_over/game_over_stats_card.dart
-//
-// 📊 GameOverStatsCard — compact summary of session / overall stats.
-// Data-only: caller (screen) provides all numbers.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
+import 'sentence_completion_row.dart';
+import 'cycles_played_row.dart';
+import 'trophies_row.dart';
 
 class GameOverStatsCard extends StatelessWidget {
-  /// Total number of sentences in the game.
   final int totalSentences;
-
-  /// How many sentences are fully completed.
   final int completedSentences;
-
-  /// Total cycles completed across all sentences (or this session).
   final int totalCycles;
-
-  /// Trophy counts (global).
   final int bronze;
   final int silver;
   final int gold;
@@ -53,138 +46,26 @@ class GameOverStatsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Progress row
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Sentences completed',
-                      style: AmagamaTypography.bodyStyle.copyWith(
-                        color: AmagamaColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '$completedSentences of $totalSentences',
-                      style: AmagamaTypography.titleStyle.copyWith(
-                        fontSize: 18,
-                        color: AmagamaColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              SizedBox(
-                width: 72,
-                height: 72,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      value: completion,
-                      strokeWidth: 7,
-                      backgroundColor:
-                          AmagamaColors.surface.withValues(alpha: 0.7),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AmagamaColors.secondary,
-                      ),
-                    ),
-                    Text(
-                      '${(completion * 100).round()}%',
-                      style: AmagamaTypography.bodyStyle.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AmagamaColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          SentenceCompletionRow(
+            completed: completedSentences,
+            total: totalSentences,
+            completion: completion,
           ),
 
           const SizedBox(height: 16),
           const Divider(height: 24),
 
-          // Cycles
-          Row(
-            children: [
-              Icon(
-                Icons.loop_rounded,
-                size: 22,
-                color: AmagamaColors.textSecondary.withValues(alpha: 0.9),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Cycles played: $totalCycles',
-                style: AmagamaTypography.bodyStyle.copyWith(
-                  color: AmagamaColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
+          CyclesPlayedRow(totalCycles: totalCycles),
 
           const SizedBox(height: 16),
 
-          // Trophies row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _TrophyMiniTile(
-                emoji: '🥉',
-                label: 'Bronze',
-                count: bronze,
-              ),
-              _TrophyMiniTile(
-                emoji: '🥈',
-                label: 'Silver',
-                count: silver,
-              ),
-              _TrophyMiniTile(
-                emoji: '🥇',
-                label: 'Gold',
-                count: gold,
-              ),
-            ],
+          TrophiesRow(
+            bronze: bronze,
+            silver: silver,
+            gold: gold,
           ),
         ],
       ),
-    );
-  }
-}
-
-class _TrophyMiniTile extends StatelessWidget {
-  final String emoji;
-  final String label;
-  final int count;
-
-  const _TrophyMiniTile({
-    required this.emoji,
-    required this.label,
-    required this.count,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          emoji,
-          style: const TextStyle(fontSize: 26),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '$count × $label',
-          style: AmagamaTypography.bodyStyle.copyWith(
-            fontSize: 13,
-            color: AmagamaColors.textSecondary,
-          ),
-        ),
-      ],
     );
   }
 }

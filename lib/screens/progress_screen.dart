@@ -2,7 +2,7 @@
 // 📈 Amagama — Progress Screen
 
 import 'package:flutter/material.dart';
-import '../widgets/common/screen_header.dart';
+import '../widgets/common/index.dart';
 import '../widgets/progress/progress_list.dart';
 import '../theme/index.dart';
 
