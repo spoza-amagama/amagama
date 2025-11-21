@@ -1,22 +1,20 @@
 // 📄 lib/widgets/home/home_content.dart
 //
 // 🏡 HomeContent — main Home Screen body.
-// • Compressed vertical layout for small screens
-// • Uses refactored widgets (stats, trophies, progress, buttons)
-// • Smooth carousel height animation
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:amagama/theme/index.dart';
 import 'package:amagama/state/game_controller.dart';
-import 'package:amagama/data/index.dart';
 import 'package:amagama/utils/sentence_height.dart';
 
-import 'home_sentence_carousel.dart';
+import 'home_header.dart';
+import 'home_sentence_header.dart';
 import 'home_sentence_stats.dart';
-import 'home_trophies_row.dart';
+import 'home_sentence_carousel.dart';
 import 'home_progress_bar.dart';
+import 'home_buttons.dart';
 import 'play_button_centered.dart';
 import 'grownups_button.dart';
 
@@ -27,89 +25,100 @@ class HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
 
-    // 👁 Live carousel index
-    final int viewIdx = game.viewSentenceIndex;
-    final sentence = sentences[viewIdx];
-
-    // 🎮 Active sentence progress
-    final int activeIdx = game.currentSentenceIndex;
-    final cyclesDone = game.progress[activeIdx].cyclesCompleted;
-    final cyclesTarget = game.cyclesTarget;
-
-    // 🏆 Global totals
-    final bronze = game.totalBronze;
-    final silver = game.totalSilver;
-    final gold = game.totalGold;
-
-    // 🎛 Dynamic sentence card height
-    final lineCount = estimateSentenceLines(sentence.text);
-    final double targetHeight = computeSentenceCardHeight(lineCount);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // ⬆️ Smaller gap
-        const SizedBox(height: AmagamaSpacing.sm),
-
-        // ------------------------------------------------------------
-        // 🎠 Sentence Carousel — animated height
-        // ------------------------------------------------------------
-        TweenAnimationBuilder<double>(
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeOutCubic,
-          tween: Tween<double>(end: targetHeight),
-          builder: (_, h, child) => SizedBox(height: h, child: child),
-          child: const HomeSentenceCarousel(),
+    // 🛑 Prevent crash before GameController.init() finishes
+    if (!game.sentences.ready ||
+        game.progress.all.isEmpty ||
+        game.cycles.cyclesTarget == 0) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                color: AmagamaColors.warning,
+                strokeWidth: 4,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Loading Amagama...',
+                style: AmagamaTypography.titleStyle.copyWith(
+                  fontSize: 20,
+                  color: AmagamaColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
+      );
+    }
 
-        const SizedBox(height: 18), // 🔽 tighter
+    final int idx = game.sentences.currentSentence;
+    final sentence = game.sentences.byIndex(idx);
+    final prog = game.progress.byIndex(idx);
+    final cyclesTarget = game.cycles.cyclesTarget;
 
-        // ------------------------------------------------------------
-        // 📘 Sentence X / Y + Cycles
-        // ------------------------------------------------------------
-        HomeSentenceStats(
-          viewIndex: viewIdx,
-          cyclesDone: cyclesDone,
-          cyclesTarget: cyclesTarget,
-        ),
+    final sentenceHeight = SentenceHeight.of(context, sentence.text);
 
-        const SizedBox(height: 12), // 🔽 tighter
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AmagamaSpacing.md,
+        vertical: AmagamaSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Logo + trophies summary
+          HomeHeader(game: game),
 
-        // ------------------------------------------------------------
-        // 🏆 Trophy Row — smaller circles & reduced spacing
-        // ------------------------------------------------------------
-        HomeTrophiesRow(
-          bronze: bronze,
-          silver: silver,
-          gold: gold,
-        ),
+          const SizedBox(height: AmagamaSpacing.md),
 
-        const SizedBox(height: 12), // 🔽 tighter spacing
+          // Sentence header (1 of XX)
+          HomeSentenceHeader(
+            sentenceNumber: idx + 1,
+            totalSentences: game.sentences.total,
+            cyclesDone: prog.cyclesCompleted,
+            cyclesTarget: cyclesTarget,
+          ),
 
-        // ------------------------------------------------------------
-        // 📊 Progress Bar
-        // ------------------------------------------------------------
-        HomeProgressBar(
-          progress: cyclesDone,
-          target: cyclesTarget,
-        ),
+          const SizedBox(height: AmagamaSpacing.xs),
 
-        const SizedBox(height: 26), // 🔽 previously xl
+          // Stats row
+          HomeSentenceStats(
+            cyclesDone: prog.cyclesCompleted,
+            cyclesTarget: cyclesTarget,
+            sentenceHeight: sentenceHeight,
+          ),
 
-        // ------------------------------------------------------------
-        // ▶ Play Button (perfectly centered label)
-        // ------------------------------------------------------------
-        const PlayButtonCentered(),
+          const SizedBox(height: AmagamaSpacing.sm),
 
-        const SizedBox(height: 14),
+          HomeProgressBar(
+            cyclesDone: prog.cyclesCompleted,
+            cyclesTarget: cyclesTarget,
+          ),
 
-        // ------------------------------------------------------------
-        // 🔒 Grown Ups Button
-        // ------------------------------------------------------------
-        const GrownUpsButton(),
+          const SizedBox(height: AmagamaSpacing.lg),
 
-        const SizedBox(height: 18), // 🔽 tighter to bottom
-      ],
+          // Sentence carousel
+          SizedBox(
+            height: sentenceHeight,
+            child: const HomeSentenceCarousel(),
+          ),
+
+          const SizedBox(height: AmagamaSpacing.lg),
+
+          const PlayButtonCentered(),
+          const SizedBox(height: 12),
+
+          const HomeButtons(),
+          const SizedBox(height: 12),
+
+          const GrownUpsButton(),
+
+          const SizedBox(height: 14),
+        ],
+      ),
     );
   }
 }

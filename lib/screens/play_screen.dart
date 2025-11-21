@@ -4,12 +4,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../widgets/common/screen_header.dart';
+import '../widgets/common/index.dart';
 import '../widgets/play/game_play_area.dart';
 import '../widgets/play/play_footer.dart';
-import '../widgets/common/gold_confetti_overlay.dart';
 
-import '../data/index.dart';
 import '../state/game_controller.dart';
 import '../services/audio/audio_service.dart';
 import '../theme/index.dart';
@@ -33,29 +31,33 @@ class _PlayScreenState extends State<PlayScreen>
   @override
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
-    final idx = game.currentSentenceIndex;
-    final s = sentences[idx];
 
-    _sentenceId.value = idx.toString();
+    // New: sentence index from SentenceService
+    final int idx = game.sentences.currentSentence;
+    final sentence = game.sentences.byIndex(idx);
 
-    // 🪄 Confetti is handled via GameController.justUnlockedGold
-    // GameController will call consumeGoldConfetti() after PlayScreen rebuilds.
+    // Sentence id for footer sentence playback (ensure String)
+    _sentenceId.value = sentence.id.toString();
+
+    // Corrected: Progress lookup now uses int
+    final sentenceProgress = game.progress.bySentenceId(sentence.id);
 
     return Scaffold(
       backgroundColor: AmagamaColors.background,
       body: SafeArea(
         child: GoldConfettiOverlay(
-          trigger: game.justUnlockedGold,
+          // Gold confetti driven by TrophyService
+          trigger: game.trophies.justUnlockedGold,
           child: Column(
             children: [
               ScreenHeader(
                 title: 'Play',
                 showLogo: false,
-                subtitle: s.text,
-                cyclesDone: game.progress[idx].cyclesCompleted,
-                cyclesTarget: game.cyclesTarget,
+                subtitle: sentence.text,
+                cyclesDone: sentenceProgress.cyclesCompleted,
+                cyclesTarget: game.cycles.cyclesTarget,
                 sentenceNumber: idx + 1,
-                totalSentences: sentences.length,
+                totalSentences: game.sentences.total,
                 leadingAction: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => Navigator.pop(context),
@@ -73,8 +75,7 @@ class _PlayScreenState extends State<PlayScreen>
                       (_) => _playWord.value = false,
                     );
                   },
-                  // Legacy hook: still passed, but GameController no-ops it
-                  onComplete: (_) => game.finishSentence(context),
+                  onComplete: (_) {},
                 ),
               ),
 

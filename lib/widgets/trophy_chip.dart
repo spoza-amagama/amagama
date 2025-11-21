@@ -1,42 +1,54 @@
 // 📄 lib/widgets/home/trophy_chip.dart
 //
-// 🏅 TrophyChip — small badge-style trophy indicator.
-// Supports custom icon and color for bronze/silver/gold.
+// 🏅 TrophyChip — compact emoji + count indicator used on Home Screen.
 
 import 'package:flutter/material.dart';
+import 'package:amagama/theme/index.dart';
 
 class TrophyChip extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String label;
-  final bool earned;
+  final String label;   // Bronze / Silver / Gold
+  final int count;      // Number earned
+  final String emoji;   // 🥉 🥈 🥇
 
   const TrophyChip({
     super.key,
-    required this.icon,
-    required this.color,
     required this.label,
-    required this.earned,
+    required this.count,
+    required this.emoji,
   });
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = earned ? color : Colors.grey.shade400;
-    final textColor = earned ? Colors.brown.shade800 : Colors.grey.shade500;
+    final earned = count > 0;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: iconColor, size: 20),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: textColor,
-              ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AmagamaColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: earned ? AmagamaColors.textPrimary : Colors.grey.shade400,
+          width: 1.4,
         ),
-      ],
+      ),
+      child: Row(
+        children: [
+          Text(
+            emoji,
+            style: const TextStyle(fontSize: 18),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$count',
+            style: AmagamaTypography.bodyStyle.copyWith(
+              fontWeight: FontWeight.bold,
+              color: earned
+                  ? AmagamaColors.textPrimary
+                  : Colors.grey.shade500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,52 +1,41 @@
 // 📄 lib/widgets/home/home_sentence_header.dart
 //
-// 🏡 HomeSentenceHeader
-// Displays the main sentence, cycles, and sentence count.
+// 📝 HomeSentenceHeader — sentence number + cycles info.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
 
 class HomeSentenceHeader extends StatelessWidget {
-  final String sentenceText;
-  final int cyclesDone;
-  final int cyclesTarget;
   final int sentenceNumber;
   final int totalSentences;
+  final int cyclesDone;
+  final int cyclesTarget;
 
   const HomeSentenceHeader({
     super.key,
-    required this.sentenceText,
-    required this.cyclesDone,
-    required this.cyclesTarget,
     required this.sentenceNumber,
     required this.totalSentences,
+    required this.cyclesDone,
+    required this.cyclesTarget,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       children: [
-        // Main sentence
         Text(
-          sentenceText,
-          textAlign: TextAlign.center,
-          style: AmagamaTypography.titleStyle,
+          'Sentence $sentenceNumber of $totalSentences',
+          style: AmagamaTypography.titleStyle.copyWith(
+            fontSize: 20,
+            color: AmagamaColors.textPrimary,
+          ),
         ),
-
-        const SizedBox(height: AmagamaSpacing.sm),
-
-        // Cycles + sentence number
-        Column(
-          children: [
-            Text(
-              'Cycles: $cyclesDone of $cyclesTarget',
-              style: AmagamaTypography.subtitleStyle,
-            ),
-            Text(
-              'Sentence $sentenceNumber of $totalSentences',
-              style: AmagamaTypography.subtitleStyle,
-            ),
-          ],
+        const Spacer(),
+        Text(
+          'Cycles: $cyclesDone / $cyclesTarget',
+          style: AmagamaTypography.bodyStyle.copyWith(
+            color: AmagamaColors.textSecondary,
+          ),
         ),
       ],
     );

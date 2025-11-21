@@ -1,107 +1,90 @@
-// 📄 lib/widgets/common/screen_header.dart
+// 📄 lib/widgets/common/index.dart
 //
-// 🌍 Compact ScreenHeader shared across all screens.
-// ------------------------------------------------------
-// • Reduced vertical spacing
-// • Smaller logo
-// • Optional subtitle, cycles, sentence number
-// • No use of withOpacity()
+// Reusable top-of-screen header with optional subtitle and progress info.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
 
 class ScreenHeader extends StatelessWidget {
   final String title;
-  final String? subtitle;
-
   final bool showLogo;
+  final String? subtitle;
 
   final int? cyclesDone;
   final int? cyclesTarget;
-
   final int? sentenceNumber;
   final int? totalSentences;
 
   final Widget? leadingAction;
-  final Widget? trailingAction;
 
   const ScreenHeader({
     super.key,
     required this.title,
+    required this.showLogo,
     this.subtitle,
-    this.showLogo = false,
     this.cyclesDone,
     this.cyclesTarget,
     this.sentenceNumber,
     this.totalSentences,
     this.leadingAction,
-    this.trailingAction,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      // ✂️ Compressed padding for compact header
-      padding: const EdgeInsets.symmetric(
-        horizontal: AmagamaSpacing.md,
-        vertical: AmagamaSpacing.sm,
-      ),
+      padding: const EdgeInsets.all(AmagamaSpacing.md),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 🔙 leading + title + trailing row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              leadingAction ?? const SizedBox(width: 24),
+              if (leadingAction != null) leadingAction!,
+              if (leadingAction != null) const SizedBox(width: 8),
               Text(
                 title,
-                style: AmagamaTypography.titleStyle,
+                style: AmagamaTypography.titleStyle.copyWith(
+                  fontSize: 26,
+                  color: AmagamaColors.textPrimary,
+                ),
               ),
-              trailingAction ?? const SizedBox(width: 24),
+              if (showLogo) ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.auto_awesome, color: Colors.amber),
+              ],
+              const Spacer(),
             ],
           ),
-
-          const SizedBox(height: AmagamaSpacing.xs),
-
-          // 🪶 Logo (optional)
-          if (showLogo) ...[
-            Image.asset(
-              "assets/logo/amagama_logo.png",
-              width: 52,
-              height: 52,
-            ),
-            const SizedBox(height: AmagamaSpacing.xs),
-          ],
-
-          // Subtitle
-          if (subtitle != null)
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
             Text(
               subtitle!,
-              textAlign: TextAlign.center,
-              style: AmagamaTypography.subtitleStyle,
+              style: AmagamaTypography.bodyStyle.copyWith(
+                color: AmagamaColors.textSecondary,
+              ),
             ),
-
-          // Cycles progress text
-          if (cyclesDone != null && cyclesTarget != null)
+          ],
+          if (sentenceNumber != null && totalSentences != null) ...[
+            const SizedBox(height: 4),
             Text(
-              "Cycles: $cyclesDone / $cyclesTarget",
-              style: AmagamaTypography.progressStyle,
+              'Sentence $sentenceNumber of $totalSentences',
+              style: AmagamaTypography.bodyStyle.copyWith(
+                color: AmagamaColors.textSecondary.withValues(alpha: 0.9),
+                fontSize: 13,
+              ),
             ),
-
-          // Sentence number
-          if (sentenceNumber != null && totalSentences != null)
-            Text(
-              "Sentence $sentenceNumber of $totalSentences",
-              style: AmagamaTypography.progressStyle,
+          ],
+          if (cyclesDone != null && cyclesTarget != null) ...[
+            const SizedBox(height: 6),
+            LinearProgressIndicator(
+              value: cyclesTarget == 0
+                  ? 0
+                  : (cyclesDone! / cyclesTarget!).clamp(0.0, 1.0),
+              minHeight: 6,
+              backgroundColor:
+                  AmagamaColors.surface.withValues(alpha: 0.5),
+              color: AmagamaColors.secondary,
             ),
-
-          const SizedBox(height: AmagamaSpacing.xs),
-
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: AmagamaColors.primary.withValues(alpha: 0.1),
-          ),
+          ],
         ],
       ),
     );

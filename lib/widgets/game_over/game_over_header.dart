@@ -1,26 +1,42 @@
 // 📄 lib/widgets/game_over/game_over_header.dart
 //
-// Displays "You Did It!" header with African-themed styling.
+// 🏁 GameOverHeader — title + short summary text for Game Over screen.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
 
 class GameOverHeader extends StatelessWidget {
-  const GameOverHeader({super.key});
+  final String title;
+  final String subtitle;
+
+  const GameOverHeader({
+    super.key,
+    required this.title,
+    required this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Text('You Did It!',
-      style: AmagamaTypography.textTheme.headlineLarge?.copyWith(
-        color: AmagamaColors.textPrimary,
-        shadows: [
-          Shadow(
-            color: AmagamaColors.accent.withValues(alpha: 0.4),
-            blurRadius: 8,
+    return Column(
+      children: [
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: AmagamaTypography.titleStyle.copyWith(
+            fontSize: 32,
+            color: AmagamaColors.textPrimary,
           ),
-        ],
-      ),
-      textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: AmagamaTypography.bodyStyle.copyWith(
+            fontSize: 16,
+            color: AmagamaColors.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 }

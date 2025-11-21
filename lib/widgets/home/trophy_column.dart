@@ -25,14 +25,14 @@ class TrophyColumn extends StatelessWidget {
         Container(
           width: 58,
           height: 58,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF4C8),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFF4C8),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFE8D8A0),
+                color: Color(0xFFE8D8A0),
                 blurRadius: 5,
-                offset: const Offset(0, 3),
+                offset: Offset(0, 3),
               ),
             ],
           ),

@@ -1,45 +1,39 @@
 // 📄 lib/widgets/play/animated_match_grid.dart
 //
-// 🎲 AnimatedMatchGrid
+// 🎲 AnimatedMatchGrid (Updated for new CardGrid Architecture)
 // ------------------------------------------------------------
-// Displays a responsive grid of [MatchFlipCard] widgets.
-// Integrates glow and matched highlights from [CardGridController].
-//
-// RESPONSIBILITIES
-// • Renders dynamic card grid layout per screen size.
-// • Delegates card flipping and audio playback to controller.
-// • Layers glow/match visual feedback over each card.
-//
-// DEPENDENCIES
-// • [CardGridController] — orchestrates flip/audio/match state.
-// • [CardGridGlow], [CardGridMatchedHighlight] — visual effects.
-// • [MatchFlipCard] — interactive card widget.
+// • Uses CardGridController for layout
+// • Uses CardCell for rendering
+// • No deprecated helpers (GridLayoutHelper, MatchFlipCard, etc.)
+// • Pure presentation: no game logic here
 //
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'package:amagama/models/card_item.dart';
 import 'package:amagama/controllers/card_grid_controller.dart';
-import 'package:amagama/widgets/play/match_flip_card.dart';
-import 'package:amagama/widgets/play/card_grid_glow.dart';
-import 'package:amagama/widgets/play/card_grid_matched_highlight.dart';
+import 'package:amagama/widgets/card_cell.dart';
 
 class AnimatedMatchGrid extends StatelessWidget {
   final List<CardItem> cards;
-  final int sentenceId;
+  final bool fadeOut;
+  final void Function(CardItem) onCardTap;
 
   const AnimatedMatchGrid({
     super.key,
     required this.cards,
-    required this.sentenceId,
+    required this.fadeOut,
+    required this.onCardTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final grid = context.watch<CardGridController>();
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final controller = context.watch<CardGridController>();
-        final layout = controller.computeGridLayout(
+        final layout = grid.computeGridLayout(
           boxSize: Size(constraints.maxWidth, constraints.maxHeight),
           totalCards: cards.length,
         );
@@ -49,40 +43,31 @@ class AnimatedMatchGrid extends StatelessWidget {
           physics: layout.scrollable
               ? const BouncingScrollPhysics()
               : const NeverScrollableScrollPhysics(),
+          itemCount: cards.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: layout.cols,
-            mainAxisSpacing: layout.spacing,
             crossAxisSpacing: layout.spacing,
+            mainAxisSpacing: layout.spacing,
             childAspectRatio: 1.0,
           ),
-          itemCount: cards.length,
-          itemBuilder: (context, i) {
-            final card = cards[i];
-            final isMatched = controller.isMatched(card.id);
-            final isGlowing = controller.isGlowing(card.id);
-            final sparkleKey = GlobalKey();
+          itemBuilder: (context, index) {
+            final card = cards[index];
 
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                MatchFlipCard(
-                  key: ValueKey(card.id),
-                  card: card,
-                  sparkleKey: sparkleKey,
-                  onTap: () => controller.handleCardFlip(
-                    context: context,
-                    item: card,
-                    sentenceId: sentenceId,
-                    boxSize: Size(
-                      constraints.maxWidth,
-                      constraints.maxHeight,
-                    ),
-                    totalCards: cards.length,
-                  ),
-                ),
-                CardGridGlow(active: isGlowing),
-                CardGridMatchedHighlight(visible: isMatched),
-              ],
+            // CardGridController APIs expect String IDs
+            final isMatched = grid.isMatched(card.id.toString());
+            final isGlowing = grid.isGlowing(card.id.toString());
+
+            return AnimatedOpacity(
+              duration: const Duration(milliseconds: 250),
+              opacity: fadeOut && isMatched ? 0.35 : 1.0,
+              child: CardCell(
+                item: card,
+                isMatched: isMatched,
+                isGlowing: isGlowing,
+                size: layout.cardSize,
+                lockInput: false,
+                onFlip: () => onCardTap(card),
+              ),
             );
           },
         );

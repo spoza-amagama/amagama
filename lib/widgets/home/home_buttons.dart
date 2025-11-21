@@ -1,69 +1,60 @@
 // 📄 lib/widgets/home/home_buttons.dart
+//
+// 🧩 HomeButtons — secondary row (Progress / Reset).
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../state/game_controller.dart';
+
+import 'package:amagama/state/game_controller.dart';
+import 'package:amagama/theme/index.dart';
+import 'package:amagama/widgets/common/index.dart'; // <-- updated: unified ConfirmDialog
 
 class HomeButtons extends StatelessWidget {
   const HomeButtons({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final game = context.watch<GameController>();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _Button(
-            label: 'Play',
-            icon: Icons.play_arrow_rounded,
-            color: Colors.green,
-            onTap: () => Navigator.pushNamed(context, '/play'),
-          ),
-          _Button(
-            label: 'Progress',
-            icon: Icons.bar_chart_rounded,
-            color: Colors.blue,
-            onTap: () => Navigator.pushNamed(context, '/progress'),
-          ),
-          _Button(
-            label: 'Reset',
-            icon: Icons.restart_alt_rounded,
-            color: Colors.redAccent,
-            onTap: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Reset all progress?'),
-                  content: const Text(
-                      'This will erase all your sentences, matches, and trophies.'),
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel')),
-                    TextButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Reset')),
-                  ],
-                ),
-              );
-              if (confirm == true) await game.resetAll();
-            },
-          ),
-        ],
-      ),
+    return Row(
+      children: [
+        _HomeActionButton(
+          label: 'Progress',
+          icon: Icons.bar_chart_rounded,
+          color: AmagamaColors.secondary,
+          onTap: () => Navigator.pushNamed(context, '/progress'),
+        ),
+        const SizedBox(width: 12),
+        _HomeActionButton(
+          label: 'Reset',
+          icon: Icons.restart_alt_rounded,
+          color: AmagamaColors.accent,
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (_) => ConfirmDialog(
+                title: 'Reset Progress?',
+                message:
+                    'This will erase all trophies, cycles and sentence progress.',
+                confirmLabel: 'Reset',
+                destructive: true, // 🔥 matches action intent
+                onConfirm: () async {
+                  await context.read<GameController>().resetAll();
+                },
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
 
-class _Button extends StatelessWidget {
+class _HomeActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
-  const _Button({
+  const _HomeActionButton({
     required this.label,
     required this.icon,
     required this.color,
@@ -71,16 +62,21 @@ class _Button extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => ElevatedButton.icon(
-        icon: Icon(icon, color: Colors.white),
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 20),
         label: Text(label),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        style: AmagamaButtons.primary.copyWith(
+          minimumSize: WidgetStateProperty.all(
+            const Size.fromHeight(44),
+          ),
+          backgroundColor: WidgetStateProperty.all(
+            color.withValues(alpha: 0.95),
           ),
         ),
-        onPressed: onTap,
-      );
+      ),
+    );
+  }
 }

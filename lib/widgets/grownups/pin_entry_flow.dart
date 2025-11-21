@@ -1,8 +1,4 @@
 // 📄 lib/widgets/grownups/pin_entry_flow.dart
-//
-// Reusable PIN entry flow using the shared keypad + dot UI.
-//
-
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
 import 'pin_dots.dart';
@@ -10,15 +6,13 @@ import 'keypad.dart';
 
 class PinEntryFlow extends StatefulWidget {
   final String title;
-  final String? verifyAgainst;  // optional
-  final String errorText;
-  final bool enforceLengthOnly; // for new PIN
+  final String? verifyAgainst;
+  final bool enforceLengthOnly;
   final void Function(String pin) onComplete;
 
   const PinEntryFlow({
     super.key,
     required this.title,
-    required this.errorText,
     required this.onComplete,
     this.verifyAgainst,
     this.enforceLengthOnly = false,
@@ -30,9 +24,8 @@ class PinEntryFlow extends StatefulWidget {
 
 class _PinEntryFlowState extends State<PinEntryFlow>
     with SingleTickerProviderStateMixin {
-
   String _entered = "";
-  bool _isError = false;
+  bool _error = false;
 
   late AnimationController _shake;
   late Animation<double> _shakeAnim;
@@ -42,9 +35,9 @@ class _PinEntryFlowState extends State<PinEntryFlow>
     super.initState();
     _shake = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 350),
+      duration: const Duration(milliseconds: 300),
     );
-    _shakeAnim = Tween<double>(begin: 0, end: 14)
+    _shakeAnim = Tween<double>(begin: 0, end: 16)
         .chain(CurveTween(curve: Curves.elasticIn))
         .animate(_shake);
   }
@@ -53,44 +46,40 @@ class _PinEntryFlowState extends State<PinEntryFlow>
     final pin = _entered;
 
     if (widget.enforceLengthOnly) {
-      if (pin.length != 4) {
-        _triggerError();
-        return;
-      }
-      widget.onComplete(pin);
-      return;
+      if (pin.length != 4) return _triggerErr();
+      return widget.onComplete(pin);
     }
 
     if (widget.verifyAgainst != null && pin != widget.verifyAgainst) {
-      _triggerError();
-      return;
+      return _triggerErr();
     }
 
     widget.onComplete(pin);
   }
 
-  void _triggerError() {
-    setState(() => _isError = true);
+  void _triggerErr() {
+    setState(() => _error = true);
     _shake.forward(from: 0);
-
-    Future.delayed(const Duration(milliseconds: 400), () {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
       setState(() {
-        _isError = false;
+        _error = false;
         _entered = "";
       });
     });
   }
 
   void _addDigit(String d) {
-    if (_entered.length >= 4) return;
+    if (_entered.length == 4) return;
+
     setState(() => _entered += d);
 
     if (_entered.length == 4) {
-      Future.delayed(const Duration(milliseconds: 120), _submit);
+      Future.delayed(const Duration(milliseconds: 100), _submit);
     }
   }
 
-  void _backspace() {
+  void _back() {
     if (_entered.isNotEmpty) {
       setState(() => _entered = _entered.substring(0, _entered.length - 1));
     }
@@ -99,12 +88,12 @@ class _PinEntryFlowState extends State<PinEntryFlow>
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
       backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(24),
       child: AnimatedBuilder(
         animation: _shakeAnim,
         builder: (_, child) => Transform.translate(
-          offset: Offset(_isError ? _shakeAnim.value : 0, 0),
+          offset: Offset(_error ? _shakeAnim.value : 0, 0),
           child: child,
         ),
         child: _content(),
@@ -114,52 +103,41 @@ class _PinEntryFlowState extends State<PinEntryFlow>
 
   Widget _content() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 26, 20, 16),
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
-        borderRadius: BorderRadius.circular(30),
+        color: AmagamaColors.surface,
+        borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.18),
             blurRadius: 20,
             offset: const Offset(0, 8),
-          ),
+            color: Colors.black.withValues(alpha: 0.15),
+          )
         ],
       ),
-
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Text(
-              widget.title,
-              style: AmagamaTypography.sectionTitleStyle.copyWith(fontSize: 24),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-
-            PinDots(filled: _entered.length),
-
-            const SizedBox(height: 26),
-
-            GrownupsKeypad(
-              onDigit: _addDigit,
-              onBackspace: _backspace,
-            ),
-
-            const SizedBox(height: 16),
-
-            TextButton(
-              onPressed: () => Navigator.pop(context, null),
-              child: Text(
-                "Cancel",
-                style: AmagamaTypography.buttonStyle.copyWith(
-                  color: AmagamaColors.textSecondary,
-                  fontSize: 17,
-                ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(widget.title,
+              style: AmagamaTypography.titleStyle.copyWith(fontSize: 26)),
+          const SizedBox(height: 24),
+          PinDots(filled: _entered.length),
+          const SizedBox(height: 28),
+          GrownupsKeypad(
+            onDigit: _addDigit,
+            onBackspace: _back,
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: AmagamaTypography.bodyStyle.copyWith(
+                color: AmagamaColors.accent,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

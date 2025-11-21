@@ -1,33 +1,39 @@
 // 📄 lib/widgets/home/home_sentence_stats.dart
+//
+// 📊 HomeSentenceStats — compact info row for current sentence.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
-import 'package:amagama/data/index.dart';
 
 class HomeSentenceStats extends StatelessWidget {
-  final int viewIndex;
   final int cyclesDone;
   final int cyclesTarget;
+  final double sentenceHeight; // still used for layout
 
   const HomeSentenceStats({
     super.key,
-    required this.viewIndex,
     required this.cyclesDone,
     required this.cyclesTarget,
+    required this.sentenceHeight,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final remaining = (cyclesTarget - cyclesDone).clamp(0, cyclesTarget);
+
+    return Row(
       children: [
-        Text(
-          "Sentence ${viewIndex + 1} of ${sentences.length}",
-          style: AmagamaTypography.progressStyle,
+        Icon(
+          Icons.school_rounded,
+          size: 20,
+          color: AmagamaColors.textSecondary.withValues(alpha: 0.9),
         ),
-        const SizedBox(height: AmagamaSpacing.xs),
+        const SizedBox(width: 6),
         Text(
-          "Cycles: $cyclesDone / $cyclesTarget",
-          style: AmagamaTypography.progressStyle,
+          '$cyclesDone cycles done • $remaining to go',
+          style: AmagamaTypography.bodyStyle.copyWith(
+            color: AmagamaColors.textSecondary,
+          ),
         ),
       ],
     );

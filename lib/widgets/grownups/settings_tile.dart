@@ -1,8 +1,4 @@
 // 📄 lib/widgets/grownups/settings_tile.dart
-//
-// 🎛 SettingsTile — reusable row for Grown Ups actions.
-// ------------------------------------------------------------
-
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
 
@@ -23,7 +19,7 @@ class SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Material(
         color: AmagamaColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -34,8 +30,8 @@ class SettingsTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
             child: Row(
               children: [
-                Icon(icon, color: color, size: 26),
-                const SizedBox(width: 14),
+                Icon(icon, color: color),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     label,

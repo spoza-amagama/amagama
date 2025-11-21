@@ -3,20 +3,17 @@
 // 👨‍👩‍👧 Grown Ups Screen — Settings & Controls
 // ------------------------------------------------------------
 // • Reset ALL progress (cycles, trophies, decks)
-// • Change parental PIN (SharedPreferences + keypad flow)
-// • Uses shared widgets from lib/widgets/grownups
+// • Change parental PIN using PIN entry flow
+// • Uses shared widgets from lib/widgets/common and lib/widgets/grownups
 // ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:amagama/theme/index.dart';
-import 'package:amagama/widgets/common/screen_header.dart';
-import 'package:amagama/state/game_controller.dart';
-
-// Grown ups widgets barrel
+import 'package:amagama/widgets/common/index.dart';
 import 'package:amagama/widgets/grownups/index.dart';
+import 'package:amagama/state/game_controller.dart';
 
 class GrownupsScreen extends StatelessWidget {
   const GrownupsScreen({super.key});
@@ -45,22 +42,27 @@ class GrownupsScreen extends StatelessWidget {
               icon: Icons.delete_forever,
               label: 'Reset all progress',
               color: Colors.red.shade700,
-              onTap: () async {
-                final ok = await showConfirmDialog(
-                  context,
-                  title: 'Reset all progress?',
-                  message:
-                      'This will erase ALL progress and cannot be undone.',
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => ConfirmDialog(
+                    title: 'Reset all progress?',
+                    message:
+                        'This will erase ALL progress and cannot be undone.',
+                    confirmLabel: 'Reset',
+                    destructive: true,
+                    onConfirm: () async {
+                      await context.read<GameController>().resetAll();
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('All progress has been reset.'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                    },
+                  ),
                 );
-                if (ok == true) {
-                  await context.read<GameController>().resetAll();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('All progress has been reset.'),
-                      backgroundColor: Colors.redAccent,
-                    ),
-                  );
-                }
               },
             ),
 
@@ -72,36 +74,39 @@ class GrownupsScreen extends StatelessWidget {
               label: 'Change parental PIN',
               color: AmagamaColors.secondary,
               onTap: () async {
-                final prefs = await SharedPreferences.getInstance();
-                final storedPin = prefs.getString('grownup_pin') ?? '1234';
+                final pinService = context.read<GameController>().pin;
+                final currentPin = pinService.currentPin;
 
-                // 1️⃣ Verify existing PIN
-                final verified = await showDialog<String>(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (_) => PinEntryFlow(
-                    title: 'Enter current PIN',
-                    errorText: 'Incorrect PIN',
-                    verifyAgainst: storedPin,
-                    onComplete: (pin) => Navigator.pop(context, pin),
-                  ),
-                );
-                if (verified == null) return;
+                // 1️⃣ Verify existing PIN (if one is set)
+                if (currentPin != null) {
+                  final verified = await showDialog<String>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) => PinEntryFlow(
+                      title: 'Enter current PIN',
+                      verifyAgainst: currentPin,
+                      onComplete: (pin) => Navigator.pop(context, pin),
+                    ),
+                  );
+                  if (verified == null) return;
+                }
 
                 // 2️⃣ Enter new PIN
                 final newPin = await showDialog<String>(
                   context: context,
                   barrierDismissible: false,
                   builder: (_) => PinEntryFlow(
-                    title: 'Enter new PIN',
-                    errorText: 'PIN must be 4 digits',
+                    title: currentPin == null
+                        ? 'Create a new PIN'
+                        : 'Enter new PIN',
                     enforceLengthOnly: true,
                     onComplete: (pin) => Navigator.pop(context, pin),
                   ),
                 );
+
                 if (newPin == null) return;
 
-                await prefs.setString('grownup_pin', newPin);
+                await pinService.setPin(newPin);
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

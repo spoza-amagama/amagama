@@ -1,18 +1,15 @@
 // 📄 lib/utils/sentence_height.dart
 //
-// 📏 Helpers to compute dynamic sentence card / carousel heights
-// based on sentence length so layout logic lives in one place.
+// Simple heuristic for sentence card height on the Home screen.
 
-int estimateSentenceLines(String text) {
-  final est = (text.length / 32).ceil();
-  return est.clamp(1, 3);
-}
+import 'package:flutter/material.dart';
 
-double computeSentenceCardHeight(int lineCount) {
-  const double baseHeight = 140;
-  const double perExtraLine = 26;
-  const double transformAllowance = 40;
-
-  final extraLines = lineCount - 1;
-  return baseHeight + perExtraLine * extraLines + transformAllowance;
+class SentenceHeight {
+  static double of(BuildContext context, String text) {
+    // Basic heuristic: longer sentences get a bit more height.
+    final length = text.length;
+    if (length < 40) return 120;
+    if (length < 80) return 150;
+    return 180;
+  }
 }

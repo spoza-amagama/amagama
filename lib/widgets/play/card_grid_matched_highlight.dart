@@ -1,39 +1,39 @@
 // 📄 lib/widgets/play/card_grid_matched_highlight.dart
 //
-// ✅ CardGridMatchedHighlight
-// ------------------------------------------------------------
-// Animated success overlay for matched card pairs.
-//
-// RESPONSIBILITIES
-// • Scales up with a green accent when two cards match.
-// • Driven by [CardGridController.isMatched].
-//
-// DEPENDENCIES
-// • [CardGridController] — source for match state.
-//
+// Small check badge over matched cards.
 
 import 'package:flutter/material.dart';
 
 class CardGridMatchedHighlight extends StatelessWidget {
   final bool visible;
 
-  const CardGridMatchedHighlight({
-    super.key,
-    required this.visible,
-  });
+  const CardGridMatchedHighlight({super.key, required this.visible});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedScale(
-      scale: visible ? 1.1 : 1.0,
-      duration: const Duration(milliseconds: 300),
-      child: AnimatedOpacity(
-        opacity: visible ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 300),
-        child: DecoratedBox(
+    if (!visible) return const SizedBox.shrink();
+
+    return Align(
+      alignment: Alignment.topRight,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Container(
+          width: 22,
+          height: 22,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.greenAccent.withValues(alpha: 0.3),
+            color: Colors.green.shade500,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 6,
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.check,
+            size: 16,
+            color: Colors.white,
           ),
         ),
       ),

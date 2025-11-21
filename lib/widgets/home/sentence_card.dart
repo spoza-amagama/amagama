@@ -1,10 +1,6 @@
 // 📄 lib/widgets/home/sentence_card.dart
 //
-// 💬 SentenceCard — shows a sentence with visual state:
-// • Active / completed: green
-// • Locked: greyed
-// • Normal: card surface
-//
+// 🃏 SentenceCard — card used in the home sentence carousel.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
@@ -25,67 +21,47 @@ class SentenceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool highlight = isActive || isCompleted;
+    final baseColor = isLocked
+        ? AmagamaColors.surface.withValues(alpha: 0.7)
+        : AmagamaColors.surface;
 
-    final Color activeBg = AmagamaColors.success;
-    final Color activeBorder = AmagamaColors.secondary;
-    final Color activeText = Colors.white;
+    final borderColor = isActive
+        ? AmagamaColors.primary
+        : AmagamaColors.textSecondary.withValues(alpha: 0.3);
 
-    final Color lockedBg = AmagamaColors.overlay(0.08);
-    final Color lockedBorder = AmagamaColors.overlay(0.2);
-    final Color lockedText = AmagamaColors.overlay(0.55);
-
-    final Color normalBg = AmagamaColors.surface;
-    final Color normalBorder = AmagamaColors.primary;
-    final Color normalText = AmagamaColors.textPrimary;
-
-    final Color bg = isLocked
-        ? lockedBg
-        : highlight
-            ? activeBg
-            : normalBg;
-
-    final Color border = isLocked
-        ? lockedBorder
-        : highlight
-            ? activeBorder
-            : normalBorder;
-
-    final Color textColor = isLocked
-        ? lockedText
-        : highlight
-            ? activeText
-            : normalText;
+    final shadowColor =
+        AmagamaColors.textPrimary.withValues(alpha: 0.12);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(width: 4, color: border),
-      ),
-      child: Stack(
-        children: [
-          if (isLocked)
-            const Align(
-              alignment: Alignment.topRight,
-              child: Icon(Icons.lock, size: 20, color: Colors.black45),
-            ),
-          Center(
-            child: Text(
-              sentenceText,
-              textAlign: TextAlign.center,
-              style: AmagamaTypography.bodyStyle.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                height: 1.25,
-                color: textColor,
-              ),
-            ),
+        color: baseColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: borderColor,
+          width: isActive ? 2.4 : 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: shadowColor,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: Opacity(
+        opacity: isLocked ? 0.55 : 1.0,
+        child: Text(
+          sentenceText,
+          style: AmagamaTypography.bodyStyle.copyWith(
+            fontSize: 18,
+            color: AmagamaColors.textPrimary,
+          ),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

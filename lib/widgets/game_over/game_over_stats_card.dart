@@ -1,51 +1,68 @@
 // 📄 lib/widgets/game_over/game_over_stats_card.dart
-//
-// Displays score and badges earned inside a themed card.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
+import 'sentence_completion_row.dart';
+import 'cycles_played_row.dart';
+import 'trophies_row.dart';
 
 class GameOverStatsCard extends StatelessWidget {
-  final int score;
-  final int badgesEarned;
+  final int totalSentences;
+  final int completedSentences;
+  final int totalCycles;
+  final int bronze;
+  final int silver;
+  final int gold;
 
   const GameOverStatsCard({
     super.key,
-    required this.score,
-    required this.badgesEarned,
+    required this.totalSentences,
+    required this.completedSentences,
+    required this.totalCycles,
+    required this.bronze,
+    required this.silver,
+    required this.gold,
   });
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = AmagamaTypography.textTheme;
+    final completion = totalSentences == 0
+        ? 0.0
+        : (completedSentences / totalSentences).clamp(0.0, 1.0);
 
     return Container(
-      padding: const EdgeInsets.all(AmagamaSpacing.md),
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AmagamaColors.background.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(AmagamaSpacing.radiusLg),
+        color: AmagamaColors.surface,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AmagamaColors.primary.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
         children: [
-          Text(
-            'Score: $score',
-            style: textTheme.headlineSmall?.copyWith(
-              color: AmagamaColors.secondary,
-            ),
+          SentenceCompletionRow(
+            completed: completedSentences,
+            total: totalSentences,
+            completion: completion,
           ),
-          const SizedBox(height: AmagamaSpacing.sm),
-          Text(
-            'Badges earned: $badgesEarned',
-            style: textTheme.bodyLarge?.copyWith(
-              color: AmagamaColors.textSecondary,
-            ),
+
+          const SizedBox(height: 16),
+          const Divider(height: 24),
+
+          CyclesPlayedRow(totalCycles: totalCycles),
+
+          const SizedBox(height: 16),
+
+          TrophiesRow(
+            bronze: bronze,
+            silver: silver,
+            gold: gold,
           ),
         ],
       ),

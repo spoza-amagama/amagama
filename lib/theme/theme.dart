@@ -24,9 +24,6 @@ static ThemeData light() {
 
       // ⭐ Use surface for cards/panels — slightly lighter than background
       surface: AmagamaColors.surface,
-
-      // ⭐ Background should NOT override scaffold
-      background: AmagamaColors.surface,
     ),
 
     appBarTheme: const AppBarTheme(

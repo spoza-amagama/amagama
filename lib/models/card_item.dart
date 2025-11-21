@@ -28,6 +28,9 @@ class CardItem {
     this.isMatched = false,
   });
 
+  // Backward compatibility for widgets still using `card.text`
+  String get text => word;
+
   // --- Legacy property stubs for transition ---
   bool get shouldFlashRed => false;
   bool get shouldShake => false;
