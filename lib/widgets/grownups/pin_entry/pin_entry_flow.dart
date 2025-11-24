@@ -1,17 +1,17 @@
 // 📄 lib/widgets/grownups/pin_entry/pin_entry_flow.dart
 //
 // PinEntryFlow — modal PIN entry dialog for Grown Ups access.
-// -----------------------------------------------------------
-// • Handles PIN entry, verification, and error shake animation
-// • Uses GrownupsKeypad for digit input
-// • Exposes static helpers: showCreate() and showVerify()
-//   so callers can simply `await PinEntryFlow.showCreate(...)`.
+// ------------------------------------------------------------
+// • Manages PIN entry + verification logic
+// • Handles error shake animation
+// • Uses PinKeypad for digit input
+// • Static helpers: showCreate() and showVerify() for easy use.
 //
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
 import 'pin_dots.dart';
-import '../keypad.dart';
+import 'pin_keypad.dart';
 
 class PinEntryFlow extends StatefulWidget {
   final String title;
@@ -28,7 +28,7 @@ class PinEntryFlow extends StatefulWidget {
   });
 
   // ---------------------------------------------------------------------------
-  // STATIC HELPERS — used by GrownUpsGuard, GrownUpsGate, etc.
+  // STATIC HELPERS — used by GrownUpsGuard, GrownUpsGate, GrownupsContent
   // ---------------------------------------------------------------------------
 
   /// Show a "create PIN" dialog.
@@ -43,15 +43,11 @@ class PinEntryFlow extends StatefulWidget {
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (_) {
-        return PinEntryFlow(
-          title: title,
-          enforceLengthOnly: enforceLengthOnly,
-          onComplete: (pin) {
-            Navigator.of(context).pop(pin);
-          },
-        );
-      },
+      builder: (_) => PinEntryFlow(
+        title: title,
+        enforceLengthOnly: enforceLengthOnly,
+        onComplete: (pin) => Navigator.of(context).pop(pin),
+      ),
     );
   }
 
@@ -67,15 +63,11 @@ class PinEntryFlow extends StatefulWidget {
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (_) {
-        return PinEntryFlow(
-          title: title,
-          verifyAgainst: correctPin,
-          onComplete: (pin) {
-            Navigator.of(context).pop(pin);
-          },
-        );
-      },
+      builder: (_) => PinEntryFlow(
+        title: title,
+        verifyAgainst: correctPin,
+        onComplete: (pin) => Navigator.of(context).pop(pin),
+      ),
     );
   }
 
@@ -85,7 +77,7 @@ class PinEntryFlow extends StatefulWidget {
 
 class _PinEntryFlowState extends State<PinEntryFlow>
     with SingleTickerProviderStateMixin {
-  String _entered = "";
+  String _entered = '';
   bool _error = false;
 
   late AnimationController _shake;
@@ -136,7 +128,7 @@ class _PinEntryFlowState extends State<PinEntryFlow>
       if (!mounted) return;
       setState(() {
         _error = false;
-        _entered = "";
+        _entered = '';
       });
     });
   }
@@ -153,7 +145,9 @@ class _PinEntryFlowState extends State<PinEntryFlow>
 
   void _back() {
     if (_entered.isNotEmpty) {
-      setState(() => _entered = _entered.substring(0, _entered.length - 1));
+      setState(() {
+        _entered = _entered.substring(0, _entered.length - 1);
+      });
     }
   }
 
@@ -198,7 +192,7 @@ class _PinEntryFlowState extends State<PinEntryFlow>
           const SizedBox(height: 24),
           PinDots(filled: _entered.length),
           const SizedBox(height: 28),
-          GrownupsKeypad(
+          PinKeypad(
             onDigit: _addDigit,
             onBackspace: _back,
           ),

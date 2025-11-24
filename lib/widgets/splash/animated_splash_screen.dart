@@ -1,7 +1,14 @@
 // 📄 lib/widgets/splash/animated_splash_screen.dart
-// AnimatedSplashScreen — fade + scale intro that leads into the loading screen.
+//
+// 🚀 AnimatedSplashScreen
+// ------------------------------------------------------------
+// • Shows Amagama logo animation
+// • Adds centered title “AMAGAMA”
+// • Adds subtitle: “A fun way to learn sight words”
+// ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:amagama/theme/index.dart';
 import 'package:amagama/routes/index.dart';
 
 class AnimatedSplashScreen extends StatefulWidget {
@@ -13,9 +20,8 @@ class AnimatedSplashScreen extends StatefulWidget {
 
 class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fade;
-  late final Animation<double> _scale;
+  late AnimationController _controller;
+  late Animation<double> _fade;
 
   @override
   void initState() {
@@ -26,20 +32,16 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
       duration: const Duration(milliseconds: 1200),
     );
 
-    _fade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-
-    _scale = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
     );
 
     _controller.forward();
 
-    // After the intro, navigate to the loading screen
-    Future.delayed(const Duration(milliseconds: 1600), () {
+    Future.delayed(const Duration(milliseconds: 1800), () {
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.loading);
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
     });
   }
 
@@ -52,15 +54,44 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AmagamaColors.background,
       body: Center(
         child: FadeTransition(
           opacity: _fade,
-          child: ScaleTransition(
-            scale: _scale,
-            child: Image.asset(
-              'assets/logo/amagama_logo.png',
-              fit: BoxFit.contain,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // APP LOGO
+              Image.asset(
+                'assets/logo/amagama_logo.png',
+                height: 110,
+              ),
+
+              const SizedBox(height: 24),
+
+              // TITLE: AMAGAMA
+              Text(
+                'AMAGAMA',
+                textAlign: TextAlign.center,
+                style: AmagamaTypography.titleStyle.copyWith(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: AmagamaColors.textPrimary,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // SUBTITLE
+              Text(
+                'A fun way to learn sight words',
+                textAlign: TextAlign.center,
+                style: AmagamaTypography.bodyStyle.copyWith(
+                  fontSize: 18,
+                  color: AmagamaColors.textSecondary,
+                ),
+              ),
+            ],
           ),
         ),
       ),

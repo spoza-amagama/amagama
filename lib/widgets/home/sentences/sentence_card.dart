@@ -2,7 +2,7 @@
 //
 // 🃏 SentenceCard — week-free, cycle-free sentence card used in the home carousel.
 // State logic:
-// • isLocked     → dimmed + disabled styling
+// • isLocked     → dimmed + disabled styling + lock watermark
 // • isCompleted  → optional check badge
 // • isActive     → highlighted border
 //
@@ -28,7 +28,7 @@ class SentenceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color baseColor = isLocked
-        ? AmagamaColors.surface.withAlpha(180) // 70% strength
+        ? AmagamaColors.surface.withAlpha(180) // dimmed
         : AmagamaColors.surface;
 
     final Color borderColor = isActive
@@ -61,9 +61,9 @@ class SentenceCard extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // ---------------------------
-          // Sentence text
-          // ---------------------------
+          // -------------------------------------------------------
+          // Sentence text (dimmed if locked)
+          // -------------------------------------------------------
           Opacity(
             opacity: isLocked ? 0.55 : 1.0,
             child: Text(
@@ -76,9 +76,21 @@ class SentenceCard extends StatelessWidget {
             ),
           ),
 
-          // ---------------------------
+          // -------------------------------------------------------
+          // WATERMARK: Large lock icon for locked items
+          // -------------------------------------------------------
+          if (isLocked)
+            IgnorePointer(
+              child: Icon(
+                Icons.lock_rounded,
+                size: 96,
+                color: Colors.black12,
+              ),
+            ),
+
+          // -------------------------------------------------------
           // Completed badge (top-right)
-          // ---------------------------
+          // -------------------------------------------------------
           if (isCompleted && !isLocked)
             const Positioned(
               top: 8,

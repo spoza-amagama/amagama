@@ -1,4 +1,8 @@
 // 📄 lib/widgets/app/index.dart
-// Barrel file for app-level widgets.
+//
+// App widgets barrel.
+// ------------------------------------------------------------
+// • AmagamaApp root widget
+//
 
 export 'amagama_app.dart';

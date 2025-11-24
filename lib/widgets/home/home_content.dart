@@ -10,10 +10,10 @@ import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/utils/sentence_height.dart';
 
 import 'home_header.dart';
-import 'home_sentence_header.dart';
-import 'home_sentence_carousel.dart';
-import 'play_button_centered.dart';
-import 'grownups_button.dart';
+import 'sentences/home_sentence_header.dart';
+import 'sentences/home_sentence_carousel.dart';
+import 'actions/play_button_centered.dart';
+import 'package:amagama/widgets/home/actions/grownups_button.dart';
 
 class HomeContent extends StatelessWidget {
   const HomeContent({super.key});
@@ -22,20 +22,57 @@ class HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final game = context.watch<GameController>();
 
-    // Simple, safe loading guard.
+    // ---------------------------------------------------------------------------
+    // LOADING STATES
+    // ---------------------------------------------------------------------------
+
     if (!game.sentences.ready) {
-      return const Center(
-        child: CircularProgressIndicator(
-          strokeWidth: 4,
-          color: AmagamaColors.warning,
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            CircularProgressIndicator(
+              strokeWidth: 4,
+              color: AmagamaColors.warning,
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Loading sentences…',
+              style: TextStyle(
+                fontSize: 16,
+                color: AmagamaColors.textPrimary,
+              ),
+            ),
+          ],
         ),
       );
     }
+
+    if (game.sentences.total == 0) {
+      return const Center(
+        child: Text(
+          'No sentences available.',
+          style: TextStyle(
+            fontSize: 16,
+            color: AmagamaColors.textPrimary,
+          ),
+        ),
+      );
+    }
+
+    // ---------------------------------------------------------------------------
+    // MAIN CONTENT
+    // ---------------------------------------------------------------------------
 
     final int idx = game.sentences.currentSentence;
     final sentence = game.sentences.byIndex(idx);
 
     final sentenceHeight = SentenceHeight.of(context, sentence.text);
+
+    // Progress for this sentence
+    final prog = game.progress.byIndex(idx);
+    final cyclesTarget = game.cycles.cyclesTarget;
+    final currentCycles = prog.cyclesCompleted.clamp(0, cyclesTarget);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
@@ -45,18 +82,31 @@ class HomeContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Logo + trophy summary
+          // Trophy summary + per-sentence bar
           HomeHeader(game: game),
 
           const SizedBox(height: AmagamaSpacing.lg),
 
-          // Sentence header: “Sentence 4 of 20”
+          // Sentence header: “Sentence 1 of 20” (centered)
           HomeSentenceHeader(
             sentenceNumber: idx + 1,
             totalSentences: game.sentences.total,
           ),
 
-          const SizedBox(height: AmagamaSpacing.md),
+          // Cycle header: “Cycle X of Y”
+          if (cyclesTarget > 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Cycle $currentCycles of $cyclesTarget',
+              textAlign: TextAlign.center,
+              style: AmagamaTypography.bodyStyle.copyWith(
+                fontSize: 16,
+                color: AmagamaColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AmagamaSpacing.md),
+          ] else
+            const SizedBox(height: AmagamaSpacing.md),
 
           // Sentence preview (carousel handles view-only interaction)
           SizedBox(

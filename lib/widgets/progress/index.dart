@@ -1,4 +1,8 @@
-// AUTO-GENERATED BARREL — DO NOT EDIT
-// Updated via tools/rebuild_barrels.dart
+// 📄 lib/widgets/progress/index.dart
+//
+// Progress widgets barrel.
+// ------------------------------------------------------------
+// • Progress list and related UI.
+//
 
 export 'progress_list.dart';

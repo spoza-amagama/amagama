@@ -1,5 +1,9 @@
 // 📄 lib/widgets/splash/index.dart
-// Barrel for splash-related widgets.
+//
+// Splash widgets barrel.
+// ------------------------------------------------------------
+// • Animated splash screen and static splash screen.
+//
 
-export 'splash_screen.dart';
 export 'animated_splash_screen.dart';
+export 'splash_screen.dart';

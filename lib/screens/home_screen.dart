@@ -2,15 +2,12 @@
 //
 // 🏡 Home Screen — simplified, week-free version
 // ------------------------------------------------------------
-// • Fixed header (shows logo + title)
+// • Custom header with Amagama logo + title + logo
 // • Body driven entirely by HomeContent
-// • No week selection, no progress by week
-// • Clean vertical layout, fully responsive
 // ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
-import 'package:amagama/widgets/common/index.dart';
 import 'package:amagama/widgets/home/home_content.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -23,21 +20,48 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            ScreenHeader(
-              title: 'Amagama',
-              showLogo: true,
-            ),
-
-            // HomeContent is responsible for:
-            // • showing the current sentence
-            // • progress / badges (sentence-based, not week-based)
-            // • play button
-            // • optional parents button
+            _HomeLogoHeader(),
             Expanded(
               child: HomeContent(),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HomeLogoHeader extends StatelessWidget {
+  const _HomeLogoHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AmagamaSpacing.md,
+        vertical: AmagamaSpacing.md,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/logo/amagama_logo.png',
+            height: 32,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Amagama',
+            style: AmagamaTypography.titleStyle.copyWith(
+              fontSize: 28,
+              color: AmagamaColors.textPrimary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Image.asset(
+            'assets/logo/amagama_logo.png',
+            height: 32,
+          ),
+        ],
       ),
     );
   }

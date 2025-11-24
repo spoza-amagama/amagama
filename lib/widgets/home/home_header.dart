@@ -1,10 +1,13 @@
 // 📄 lib/widgets/home/home_header.dart
 //
-// 🏆 HomeHeader — simplified week-free header.
+// 🏆 HomeHeader — trophies + per-sentence progress bar.
+// ------------------------------------------------------------
+// • No extra "Amagama" title row
+// • No "Sentence X/Y" here (that lives below the bar now)
+// ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:amagama/state/game_controller.dart';
-import 'package:amagama/theme/index.dart';
 
 import 'home_trophies.dart';
 
@@ -18,33 +21,8 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final idx = game.sentences.currentSentence;
-    final total = game.sentences.total;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Amagama',
-              style: AmagamaTypography.titleStyle.copyWith(
-                fontSize: 28,
-                color: AmagamaColors.textPrimary,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              'Sentence ${idx + 1}/$total',
-              style: AmagamaTypography.bodyStyle.copyWith(
-                color: AmagamaColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AmagamaSpacing.sm),
-        const HomeTrophies(),
-      ],
-    );
+    // The GameController is currently unused here, but kept to avoid
+    // touching call sites. HomeTrophies reads from context directly.
+    return const HomeTrophies();
   }
 }

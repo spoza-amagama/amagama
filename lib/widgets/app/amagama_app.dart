@@ -15,7 +15,15 @@ class AmagamaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => GameController()),
+        ChangeNotifierProvider(
+  create: (_) {
+    final game = GameController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      game.init();
+    });
+    return game;
+  },
+),
         ChangeNotifierProvider(create: (_) => AudioControllerProvider()),
       ],
       child: MaterialApp(

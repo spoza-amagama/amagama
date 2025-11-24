@@ -1,6 +1,9 @@
-// 📄 lib/widgets/home/home_sentence_header.dart
+// 📄 lib/widgets/home/sentences/home_sentence_header.dart
 //
-// 📝 HomeSentenceHeader — shows sentence number only (week-free)
+// HomeSentenceHeader — shows "Sentence X of Y".
+// ------------------------------------------------------------
+// • Centered text below trophies/progress
+// ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
@@ -17,16 +20,13 @@ class HomeSentenceHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          'Sentence $sentenceNumber of $totalSentences',
-          style: AmagamaTypography.titleStyle.copyWith(
-            fontSize: 20,
-            color: AmagamaColors.textPrimary,
-          ),
-        ),
-      ],
+    return Text(
+      'Sentence $sentenceNumber of $totalSentences',
+      textAlign: TextAlign.center,
+      style: AmagamaTypography.titleStyle.copyWith(
+        fontSize: 20,
+        color: AmagamaColors.textPrimary,
+      ),
     );
   }
 }

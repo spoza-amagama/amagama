@@ -1,10 +1,10 @@
 // 📄 lib/widgets/grownups/pin_entry/pin_keypad.dart
 //
-// PinKeypad — shared numeric keypad for PIN entry.
+// PinKeypad — 3×4 numeric keypad for PIN entry.
 // ------------------------------------------------------------
-// • 3×3 digits + 0 + backspace
-// • Emits String digits ("0"-"9")
-// • Emits onBackspace() when backspace is tapped
+// • Digits 0–9 as circular buttons
+// • Emits String digits via onDigit
+// • Backspace button via onBackspace
 //
 
 import 'package:flutter/material.dart';
@@ -28,9 +28,9 @@ class PinKeypad extends StatelessWidget {
 
         return Column(
           children: [
-            _row(size, ["1", "2", "3"]),
-            _row(size, ["4", "5", "6"]),
-            _row(size, ["7", "8", "9"]),
+            _row(size, const ["1", "2", "3"]),
+            _row(size, const ["4", "5", "6"]),
+            _row(size, const ["7", "8", "9"]),
             _bottomRow(size),
           ],
         );
@@ -44,11 +44,13 @@ class PinKeypad extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: digits
-            .map((d) => PinKeypadButton(
-                  label: d,
-                  size: size,
-                  onTap: () => onDigit(d),
-                ))
+            .map(
+              (d) => PinKeypadButton(
+                label: d,
+                size: size,
+                onTap: () => onDigit(d),
+              ),
+            )
             .toList(),
       ),
     );
@@ -60,11 +62,11 @@ class PinKeypad extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          SizedBox(width: size), // empty spacer
+          SizedBox(width: size), // spacer
           PinKeypadButton(
-            label: "0",
+            label: '0',
             size: size,
-            onTap: () => onDigit("0"),
+            onTap: () => onDigit('0'),
           ),
           PinKeypadButton(
             icon: Icons.backspace_rounded,

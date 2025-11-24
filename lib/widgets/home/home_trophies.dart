@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:amagama/state/game_controller.dart';
 import 'package:amagama/theme/index.dart';
 
-import 'home_trophies_row.dart';
+import 'content/home_trophies_row.dart';
 
 class HomeTrophies extends StatelessWidget {
   const HomeTrophies({super.key});
@@ -31,19 +31,14 @@ class HomeTrophies extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        HomeTrophiesRow(
-          bronze: game.trophies.bronze,
-          silver: game.trophies.silver,
-          gold: game.trophies.gold,
-        ),
+        const HomeTrophiesRow(),
         const SizedBox(height: 4),
         ClipRRect(
           borderRadius: BorderRadius.circular(999),
           child: LinearProgressIndicator(
             value: fraction,
             minHeight: 6,
-            backgroundColor:
-                AmagamaColors.surface.withValues(alpha: 0.6),
+            backgroundColor: AmagamaColors.surface.withValues(alpha: 0.6),
             color: AmagamaColors.warning,
           ),
         ),
