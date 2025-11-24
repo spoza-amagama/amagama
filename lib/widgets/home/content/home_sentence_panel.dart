@@ -41,7 +41,7 @@ class HomeSentencePanel extends StatelessWidget {
           ),
         ),
 
-        const const SizedBox(height: AmagamaSpacing.md),
+        const SizedBox(height: AmagamaSpacing.md),
 
         Text(
           'Cycles: $cyclesDone / $cyclesTarget',

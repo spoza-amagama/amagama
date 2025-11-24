@@ -29,7 +29,7 @@ class HomeSentenceSection extends StatelessWidget {
           sentenceNumber: idx + 1,
           totalSentences: game.sentences.total,
         ),
-        const const SizedBox(height: AmagamaSpacing.md),
+        const SizedBox(height: AmagamaSpacing.md),
         SizedBox(
           height: height,
           child: const HomeSentenceCarousel(),

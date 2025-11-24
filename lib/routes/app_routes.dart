@@ -1,15 +1,14 @@
 // 📄 lib/routes/app_routes.dart
-// 🚦 Central Routing Table for Amagama (upgraded with transitions & guards)
-// ------------------------------------------------------------
+// 🚦 Central Routing Table for Amagama
 
 import 'package:flutter/material.dart';
 
-// Screens
 import 'package:amagama/screens/loading_screen.dart';
 import 'package:amagama/screens/home_screen.dart';
 import 'package:amagama/screens/play_screen.dart';
 import 'package:amagama/screens/grownups_screen.dart';
 import 'package:amagama/screens/progress_screen.dart';
+import 'package:amagama/screens/cycles_settings_screen.dart';
 
 // Splash
 import 'package:amagama/widgets/splash/index.dart' as splashw;
@@ -25,10 +24,10 @@ class AppRoutes {
   static const String play = '/play';
   static const String grownups = '/grownups';
   static const String progress = '/progress';
+  static const String cyclesSettings = '/cycles-settings';
 
-  // 🧭 Upgraded dynamic routing (deep-linking + transitions)
+  // 🧭 Upgraded dynamic routing
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    // Deep-link friendly
     final uri = Uri.parse(settings.name ?? home);
     final path = uri.path;
 
@@ -62,7 +61,6 @@ class AppRoutes {
         );
 
       case grownups:
-        // 🔒 Guarded: can hook PIN or auth here later
         return RouteHelpers.buildPageRoute(
           builder: (_) => const GrownupsScreen(),
           settings: settings,
@@ -77,8 +75,14 @@ class AppRoutes {
           transition: RouteTransition.slideRight,
         );
 
+      case cyclesSettings:
+        return RouteHelpers.buildPageRoute(
+          builder: (_) => const CyclesSettingsScreen(),
+          settings: settings,
+          transition: RouteTransition.slideRight,
+        );
+
       default:
-        // 🌐 Unknown deep link → Home (fade)
         return RouteHelpers.buildPageRoute(
           builder: (_) => const HomeScreen(),
           settings: const RouteSettings(name: home),

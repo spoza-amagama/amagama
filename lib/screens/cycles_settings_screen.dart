@@ -34,7 +34,7 @@ class CyclesSettingsScreen extends StatelessWidget {
             // ------------------------------------------------------------
             const AmagamaHeader(subtitle: 'Cycles'),
 
-            const const SizedBox(height: AmagamaSpacing.sm),
+            const SizedBox(height: AmagamaSpacing.sm),
 
             // ------------------------------------------------------------
             // MAIN CONTENT
@@ -48,9 +48,9 @@ class CyclesSettingsScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ------------------------------------------------------------
+                    // --------------------------------------------------------
                     // SUBTITLE
-                    // ------------------------------------------------------------
+                    // --------------------------------------------------------
                     Text(
                       'How many repeats unlock the next one?',
                       style: AmagamaTypography.bodyStyle.copyWith(
@@ -58,11 +58,11 @@ class CyclesSettingsScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                    // ------------------------------------------------------------
+                    // --------------------------------------------------------
                     // SECTION HEADING
-                    // ------------------------------------------------------------
+                    // --------------------------------------------------------
                     Text(
                       'Cycles per sentence',
                       style: AmagamaTypography.titleStyle.copyWith(
@@ -71,7 +71,7 @@ class CyclesSettingsScreen extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
                     Text(
                       'Each sentence must be completed this many times\n'
@@ -81,14 +81,14 @@ class CyclesSettingsScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const const SizedBox(height: 28),
+                    const SizedBox(height: 28),
 
-                    // ------------------------------------------------------------
+                    // --------------------------------------------------------
                     // SLIDER
-                    // ------------------------------------------------------------
+                    // --------------------------------------------------------
                     Row(
                       children: [
-                        Text(
+                        const Text(
                           '${CycleService.minCycles}',
                           style: AmagamaTypography.bodyStyle,
                         ),
@@ -97,16 +97,16 @@ class CyclesSettingsScreen extends StatelessWidget {
                             data: SliderTheme.of(context).copyWith(
                               trackHeight: 4,
                               activeTrackColor: AmagamaColors.primary,
-                              inactiveTrackColor:
-                                  AmagamaColors.textSecondary.withValues(alpha: 0.3),
+                              inactiveTrackColor: AmagamaColors.textSecondary
+                                  .withValues(alpha: 0.3),
                               thumbColor: AmagamaColors.primary,
                             ),
                             child: Slider(
                               min: CycleService.minCycles.toDouble(),
                               max: CycleService.maxCycles.toDouble(),
                               value: current.toDouble(),
-                              divisions:
-                                  CycleService.maxCycles - CycleService.minCycles,
+                              divisions: CycleService.maxCycles -
+                                  CycleService.minCycles,
                               label: '$current',
                               onChanged: (value) {
                                 context
@@ -116,14 +116,14 @@ class CyclesSettingsScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Text(
+                        const Text(
                           '${CycleService.maxCycles}',
                           style: AmagamaTypography.bodyStyle,
                         ),
                       ],
                     ),
 
-                    const const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
                     Align(
                       alignment: Alignment.centerRight,

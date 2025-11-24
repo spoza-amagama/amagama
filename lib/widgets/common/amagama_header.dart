@@ -30,7 +30,7 @@ class AmagamaHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              leading ?? const const SizedBox(width: 48),
+              leading ?? const SizedBox(width: 48),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -39,7 +39,7 @@ class AmagamaHeader extends StatelessWidget {
                       'assets/logo/amagama_logo.png',
                       height: 42,
                     ),
-                    const const SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
                       'Amagama',
                       style: AmagamaTypography.titleStyle.copyWith(
@@ -50,10 +50,10 @@ class AmagamaHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              trailing ?? const const SizedBox(width: 48),
+              trailing ?? const SizedBox(width: 48),
             ],
           ),
-          const const SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             subtitle,
             style: AmagamaTypography.bodyStyle.copyWith(

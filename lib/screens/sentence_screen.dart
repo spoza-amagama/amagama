@@ -1,10 +1,6 @@
 // 📄 lib/screens/sentence_screen.dart
 //
-// SentenceScreen — review / details shell.
-// ------------------------------------------------------------
-// • Uses global AmagamaHeader with “Sentence” subtitle
-// • Body provided by SentenceContent
-// ------------------------------------------------------------
+// 📘 Sentence Review Screen — shows the current sentence and related info.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
@@ -16,14 +12,16 @@ class SentenceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: AmagamaColors.background,
       body: SafeArea(
         child: Column(
-          children: const [
+          children: [
             AmagamaHeader(subtitle: 'Sentence'),
-            const SizedBox(height: AmagamaSpacing.sm),
-            const Expanded(child: SentenceContent()),
+            SizedBox(height: AmagamaSpacing.sm),
+            Expanded(
+              child: SentenceContent(),
+            ),
           ],
         ),
       ),

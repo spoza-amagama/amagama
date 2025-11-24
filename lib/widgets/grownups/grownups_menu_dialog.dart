@@ -35,7 +35,7 @@ class GrownupMenuDialog extends StatelessWidget {
               "Grown Ups",
               style: AmagamaTypography.titleStyle.copyWith(fontSize: 30),
             ),
-            const const SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               "Manage cycles, progress and PIN.",
               style: AmagamaTypography.bodyStyle.copyWith(
@@ -43,7 +43,7 @@ class GrownupMenuDialog extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Set cycles
             SettingsTile(
@@ -59,7 +59,7 @@ class GrownupMenuDialog extends StatelessWidget {
               },
             ),
 
-            const const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
             // Reset progress
             SettingsTile(
@@ -82,7 +82,7 @@ class GrownupMenuDialog extends StatelessWidget {
               },
             ),
 
-            const const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
             // Reset PIN
             SettingsTile(
@@ -105,7 +105,7 @@ class GrownupMenuDialog extends StatelessWidget {
               },
             ),
 
-            const const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             TextButton(
               onPressed: () => Navigator.pop(context),

@@ -13,17 +13,16 @@ export 'set_cycles_dialog.dart';
 // ───────────────────────────────────────────────
 // PIN Entry System
 // ───────────────────────────────────────────────
-export 'pin_entry_flow.dart';
-export 'pin_dots.dart';
-export 'pin_title.dart';
-export 'pin_subtitle.dart';
+export 'pin_entry/pin_entry_flow.dart';
+export 'pin_entry/pin_dots.dart';
+export 'pin_entry/pin_title.dart';
+export 'pin_entry/pin_subtitle.dart';
 
 // ───────────────────────────────────────────────
 // Keypad Components
 // ───────────────────────────────────────────────
-export 'pin_keypad.dart';
-export 'pin_keypad_row.dart';
-export 'pin_button.dart';
+export 'pin_entry/pin_keypad.dart';
+export 'pin_entry/pin_button.dart';
 export 'keypad.dart';
 export 'keypad_button.dart';
 

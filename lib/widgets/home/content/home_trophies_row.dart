@@ -57,7 +57,7 @@ class _TrophyColumn extends StatelessWidget {
           size: 34,
           color: color,
         ),
-        const const SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           label,
           style: AmagamaTypography.bodyStyle.copyWith(
@@ -65,7 +65,7 @@ class _TrophyColumn extends StatelessWidget {
             color: AmagamaColors.textPrimary,
           ),
         ),
-        const const SizedBox(height: 2),
+        const SizedBox(height: 2),
         Text(
           "$count",
           style: AmagamaTypography.bodyStyle.copyWith(

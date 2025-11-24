@@ -1,32 +1,43 @@
-// 📄 lib/widgets/grownups/grownups_gate.dart
+// 📄 lib/utils/grownups_guard.dart
 //
-// GrownUpsGate — helper to open the Grown Ups area behind a PIN.
+// GrownUpsGuard — central handler for accessing the Grown Ups screen.
+// ------------------------------------------------------------
+// • If PIN exists → verify
+// • Otherwise → create
+// • Uses new PinService API (no lockout / attempts).
+// ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:amagama/routes/index.dart';
 import 'package:amagama/services/pin_service.dart';
 import 'package:amagama/widgets/grownups/pin_entry/pin_entry_flow.dart';
 
-class GrownUpsGate {
-  static Future<void> open(BuildContext context) async {
-    final pinService = PinService();
-    await pinService.init();
+class GrownUpsGuard {
+  final PinService _pin = PinService();
 
-    final existingPin = pinService.currentPin;
+  Future<void> open(BuildContext context) async {
+    // Make sure service has loaded the stored PIN.
+    await _pin.init();
+
+    final existingPin = _pin.currentPin;
 
     if (existingPin == null) {
-      // No PIN yet → create one
+      // -------------------------
+      // CREATE PIN
+      // -------------------------
       final created = await PinEntryFlow.showCreate(
         context: context,
         title: 'Create\nParent PIN',
       );
       if (created == null) return;
 
-      await pinService.setPin(created);
+      await _pin.setPin(created);
       if (!context.mounted) return;
       Navigator.pushNamed(context, AppRoutes.grownups);
     } else {
-      // PIN exists → verify
+      // -------------------------
+      // VERIFY PIN
+      // -------------------------
       final verified = await PinEntryFlow.showVerify(
         context: context,
         title: 'Enter\nParent PIN',

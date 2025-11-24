@@ -1,10 +1,6 @@
 // 📄 lib/screens/word_bank_screen.dart
 //
-// WordBankScreen — shows all learned / unlocked words.
-// ------------------------------------------------------------
-// • Uses global AmagamaHeader with “Words” subtitle
-// • Body provided by WordBankContent
-// ------------------------------------------------------------
+// 🔤 Word Bank Screen — shows all learnt words with audio.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
@@ -16,14 +12,16 @@ class WordBankScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: AmagamaColors.background,
       body: SafeArea(
         child: Column(
-          children: const [
+          children: [
             AmagamaHeader(subtitle: 'Words'),
-            const SizedBox(height: AmagamaSpacing.sm),
-            const Expanded(child: WordBankContent()),
+            SizedBox(height: AmagamaSpacing.sm),
+            Expanded(
+              child: WordBankContent(),
+            ),
           ],
         ),
       ),

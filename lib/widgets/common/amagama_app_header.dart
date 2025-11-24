@@ -47,11 +47,11 @@ class AmagamaAppHeader extends StatelessWidget {
                 onPressed: onBack,
               )
             else
-              const const SizedBox(width: 48),
+              const SizedBox(width: 48),
 
             const Spacer(),
 
-            const const SizedBox(width: 48),
+            const SizedBox(width: 48),
           ],
         ),
 
@@ -61,7 +61,7 @@ class AmagamaAppHeader extends StatelessWidget {
           height: 72,
         ),
 
-        const const SizedBox(height: 8),
+        const SizedBox(height: 8),
 
         // ---------------- Title ----------------
         Text(
@@ -73,7 +73,7 @@ class AmagamaAppHeader extends StatelessWidget {
           ),
         ),
 
-        const const SizedBox(height: 4),
+        const SizedBox(height: 4),
 
         // ---------------- Subtitle ----------------
         Text(
@@ -87,7 +87,7 @@ class AmagamaAppHeader extends StatelessWidget {
 
         // ---------------- Sentence Indicator ----------------
         if (sentenceNumber != null && totalSentences != null) ...[
-          const const SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Sentence $sentenceNumber of $totalSentences',
             style: AmagamaTypography.bodyStyle.copyWith(
@@ -98,7 +98,7 @@ class AmagamaAppHeader extends StatelessWidget {
 
         // ---------------- Cycle Indicator ----------------
         if (cyclesDone != null && cyclesTarget != null) ...[
-          const const SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             'Cycle $cyclesDone of $cyclesTarget',
             style: AmagamaTypography.bodyStyle.copyWith(
@@ -107,7 +107,7 @@ class AmagamaAppHeader extends StatelessWidget {
           ),
         ],
 
-        const const SizedBox(height: AmagamaSpacing.md),
+        const SizedBox(height: AmagamaSpacing.md),
       ],
     );
   }

@@ -35,7 +35,7 @@ class HomeTitleRow extends StatelessWidget {
           ),
         ),
 
-        const const SizedBox(height: 4),
+        const SizedBox(height: 4),
 
         // --------------------------
         // SENTENCE X / Y
@@ -48,7 +48,7 @@ class HomeTitleRow extends StatelessWidget {
           ),
         ),
 
-        const const SizedBox(height: 2),
+        const SizedBox(height: 2),
 
         // --------------------------
         // CYCLE A / B

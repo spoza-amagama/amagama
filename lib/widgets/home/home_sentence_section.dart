@@ -33,7 +33,7 @@ class HomeSentenceSection extends StatelessWidget {
           sentenceNumber: sentenceNumber,
           totalSentences: totalSentences,
         ),
-        const const SizedBox(height: AmagamaSpacing.md),
+        const SizedBox(height: AmagamaSpacing.md),
         SizedBox(
           height: sentenceHeight,
           child: const HomeSentenceCarousel(),

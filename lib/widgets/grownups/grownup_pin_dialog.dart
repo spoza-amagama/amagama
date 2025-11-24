@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:amagama/state/game_controller.dart';
-import 'pin_entry_flow.dart';
+import 'pin_entry/pin_entry_flow.dart';
 import 'grownup_menu_dialog.dart';
 
 class GrownupPinDialog extends StatelessWidget {

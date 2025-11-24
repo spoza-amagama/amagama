@@ -47,7 +47,7 @@ class HomeActions extends StatelessWidget {
           ),
         ),
 
-        const const SizedBox(height: AmagamaSpacing.lg),
+        const SizedBox(height: AmagamaSpacing.lg),
 
         // --------------------------------------------------------
         // GROWN UPS BUTTON
@@ -68,11 +68,7 @@ class HomeActions extends StatelessWidget {
               ),
             ),
             onPressed: () async {
-              final allowed = await GrownupsGate.requestAccess(context);
-              if (!allowed) return;
-              if (!context.mounted) return;
-
-              Navigator.pushNamed(context, AppRoutes.grownups);
+              await GrownUpsGate.open(context);
             },
             child: const Text(
               'Grown Ups',

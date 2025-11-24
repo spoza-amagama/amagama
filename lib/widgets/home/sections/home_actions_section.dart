@@ -16,9 +16,9 @@ class HomeActionsSection extends StatelessWidget {
     return const Column(
       children: [
         PlayButtonCentered(),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         GrownUpsButton(),
-        const SizedBox(height: AmagamaSpacing.lg),
+        SizedBox(height: AmagamaSpacing.lg),
       ],
     );
   }

@@ -1,12 +1,9 @@
-// 📄 lib/widgets/grownups/pin_entry/pin_dots.dart
-//
-// PinDots — 4-dot indicator for entered PIN length.
-
+// 📄 lib/widgets/grownups/pin_dots.dart
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
 
 class PinDots extends StatelessWidget {
-  final int filled; // 0–4
+  final int filled;
 
   const PinDots({super.key, required this.filled});
 
@@ -15,7 +12,7 @@ class PinDots extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(4, (i) {
-        final bool active = i < filled;
+        final active = i < filled;
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 8),
           width: 18,

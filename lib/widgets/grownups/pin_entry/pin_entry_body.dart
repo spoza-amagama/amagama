@@ -62,20 +62,20 @@ class PinEntryBody extends StatelessWidget {
             ),
           ),
 
-          const const SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // PIN dots
           PinDots(filled: filled),
 
-          const const SizedBox(height: 28),
+          const SizedBox(height: 28),
 
           // Keypad
           PinKeypad(
-            onDigit: onDigit,
-            onBackspace: onBackspace,
-          ),
+           onDigit: onDigit,        // FIXED
+          onBackspace: onBackspace,
+),
 
-          const const SizedBox(height: 8),
+          const SizedBox(height: 8),
 
           // Optional "Forgot PIN?"
           if (showForgotPin && onForgotPin != null)
@@ -89,7 +89,7 @@ class PinEntryBody extends StatelessWidget {
               ),
             ),
 
-          const const SizedBox(height: 8),
+          const SizedBox(height: 8),
 
           // Cancel
           TextButton(

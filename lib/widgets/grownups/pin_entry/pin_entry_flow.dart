@@ -1,41 +1,23 @@
 // 📄 lib/widgets/grownups/pin_entry/pin_entry_flow.dart
 //
-// PinEntryFlow
-// -----------------------------------------------------------------------------
-// State owner for the PIN-entry dialog flow.
+// PinEntryFlow — modal PIN entry dialog for Grown Ups access.
+// -----------------------------------------------------------
+// • Handles PIN entry, verification, and error shake animation
+// • Uses GrownupsKeypad for digit input
+// • Exposes static helpers: showCreate() and showVerify()
+//   so callers can simply `await PinEntryFlow.showCreate(...)`.
 //
-// Responsibilities:
-// • Holds the entered PIN input
-// • Manages shake animation on error
-// • Delegates UI to PinEntryBody (pure widget)
-// • Validates PIN for creation or verification
-// • Notifies caller via onComplete
-// • Supports optional onFailedAttempt and Forgot PIN callback
-// -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import 'package:amagama/widgets/grownups/pin_entry/pin_entry_body.dart';
+import 'package:amagama/theme/index.dart';
+import 'pin_dots.dart';
+import '../keypad.dart';
 
 class PinEntryFlow extends StatefulWidget {
   final String title;
-
-  /// If provided → PIN must match this value.
   final String? verifyAgainst;
-
-  /// If true → success when 4 digits are entered (used for PIN creation).
   final bool enforceLengthOnly;
-
-  /// Called when the PIN is correct (or valid in creation mode).
   final void Function(String pin) onComplete;
-
-  /// Called when verification fails.
-  final VoidCallback? onFailedAttempt;
-
-  /// Whether to show the “Forgot PIN?” link.
-  final bool showForgotPin;
-
-  /// Callback when “Forgot PIN?” is tapped.
-  final VoidCallback? onForgotPin;
 
   const PinEntryFlow({
     super.key,
@@ -43,10 +25,59 @@ class PinEntryFlow extends StatefulWidget {
     required this.onComplete,
     this.verifyAgainst,
     this.enforceLengthOnly = false,
-    this.onFailedAttempt,
-    this.showForgotPin = false,
-    this.onForgotPin,
   });
+
+  // ---------------------------------------------------------------------------
+  // STATIC HELPERS — used by GrownUpsGuard, GrownUpsGate, etc.
+  // ---------------------------------------------------------------------------
+
+  /// Show a "create PIN" dialog.
+  ///
+  /// Returns the created PIN as a String if the user completes,
+  /// or null if they cancel/dismiss.
+  static Future<String?> showCreate({
+    required BuildContext context,
+    required String title,
+    bool enforceLengthOnly = true,
+  }) {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return PinEntryFlow(
+          title: title,
+          enforceLengthOnly: enforceLengthOnly,
+          onComplete: (pin) {
+            Navigator.of(context).pop(pin);
+          },
+        );
+      },
+    );
+  }
+
+  /// Show a "verify PIN" dialog.
+  ///
+  /// Returns the entered PIN if it matches [correctPin],
+  /// or null if the user cancels/dismisses.
+  static Future<String?> showVerify({
+    required BuildContext context,
+    required String title,
+    required String correctPin,
+  }) {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return PinEntryFlow(
+          title: title,
+          verifyAgainst: correctPin,
+          onComplete: (pin) {
+            Navigator.of(context).pop(pin);
+          },
+        );
+      },
+    );
+  }
 
   @override
   State<PinEntryFlow> createState() => _PinEntryFlowState();
@@ -57,18 +88,16 @@ class _PinEntryFlowState extends State<PinEntryFlow>
   String _entered = "";
   bool _error = false;
 
-  late final AnimationController _shake;
-  late final Animation<double> _shakeAnim;
+  late AnimationController _shake;
+  late Animation<double> _shakeAnim;
 
   @override
   void initState() {
     super.initState();
-
     _shake = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-
     _shakeAnim = Tween<double>(begin: 0, end: 16)
         .chain(CurveTween(curve: Curves.elasticIn))
         .animate(_shake);
@@ -80,14 +109,9 @@ class _PinEntryFlowState extends State<PinEntryFlow>
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // Submission + validation
-  // ---------------------------------------------------------------------------
-
   void _submit() {
     final pin = _entered;
 
-    // Creating a new PIN → only check length 4
     if (widget.enforceLengthOnly) {
       if (pin.length != 4) {
         _triggerErr();
@@ -97,7 +121,6 @@ class _PinEntryFlowState extends State<PinEntryFlow>
       return;
     }
 
-    // Verifying → must match verifyAgainst
     if (widget.verifyAgainst != null && pin != widget.verifyAgainst) {
       _triggerErr();
       return;
@@ -107,24 +130,16 @@ class _PinEntryFlowState extends State<PinEntryFlow>
   }
 
   void _triggerErr() {
-    widget.onFailedAttempt?.call();
-
     setState(() => _error = true);
     _shake.forward(from: 0);
-
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!mounted) return;
-
       setState(() {
         _error = false;
         _entered = "";
       });
     });
   }
-
-  // ---------------------------------------------------------------------------
-  // Input handling
-  // ---------------------------------------------------------------------------
 
   void _addDigit(String d) {
     if (_entered.length == 4) return;
@@ -136,19 +151,14 @@ class _PinEntryFlowState extends State<PinEntryFlow>
     }
   }
 
-  void _backspace() {
-    if (_entered.isEmpty) return;
-    setState(() => _entered = _entered.substring(0, _entered.length - 1));
+  void _back() {
+    if (_entered.isNotEmpty) {
+      setState(() => _entered = _entered.substring(0, _entered.length - 1));
+    }
   }
-
-  // ---------------------------------------------------------------------------
-  // UI
-  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.of(context).viewInsets;
-
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(24),
@@ -158,18 +168,51 @@ class _PinEntryFlowState extends State<PinEntryFlow>
           offset: Offset(_error ? _shakeAnim.value : 0, 0),
           child: child,
         ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(bottom: viewInsets.bottom),
-          child: PinEntryBody(
-            title: widget.title,
-            filled: _entered.length,
-            onDigit: _addDigit,
-            onBackspace: _backspace,
-            onCancel: () => Navigator.pop(context),
-            showForgotPin: widget.showForgotPin,
-            onForgotPin: widget.onForgotPin,
+        child: _content(),
+      ),
+    );
+  }
+
+  Widget _content() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
+      decoration: BoxDecoration(
+        color: AmagamaColors.surface,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.15),
           ),
-        ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            widget.title,
+            textAlign: TextAlign.center,
+            style: AmagamaTypography.titleStyle.copyWith(fontSize: 26),
+          ),
+          const SizedBox(height: 24),
+          PinDots(filled: _entered.length),
+          const SizedBox(height: 28),
+          GrownupsKeypad(
+            onDigit: _addDigit,
+            onBackspace: _back,
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () => Navigator.pop<String?>(context),
+            child: Text(
+              'Cancel',
+              style: AmagamaTypography.bodyStyle.copyWith(
+                color: AmagamaColors.accent,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
