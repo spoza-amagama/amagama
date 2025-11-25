@@ -1,13 +1,14 @@
 // 📄 lib/state/game_controller.dart
 //
-// 🎮 GameController — now includes CycleService for cyclesTarget configuration.
+// 🎮 GameController — central app logic controller.
+// Adds updateViewSentence() so scrolling the carousel updates the header.
 
 import 'package:flutter/material.dart';
 import '../services/index.dart';
 
 class GameController extends ChangeNotifier {
   final sentences = SentenceService();
-  final cycles = CycleService();          // ✅ back in, but simplified
+  final cycles = CycleService();
   final trophies = TrophyService();
   final pin = PinService();
   final progress = ProgressService();
@@ -16,14 +17,14 @@ class GameController extends ChangeNotifier {
 
   Future<void> init() async {
     await sentences.init();
-    await cycles.init();                  // ✅ initialise cyclesTarget
+    await cycles.init();
     await trophies.init();
     await pin.init();
     await progress.init();
     await deck.init(sentences.currentSentence);
 
     rounds.bind(
-      cycles: cycles,                     // ✅ hand cycles into RoundService
+      cycles: cycles,
       progress: progress,
       trophies: trophies,
       sentences: sentences,
@@ -35,18 +36,26 @@ class GameController extends ChangeNotifier {
 
   Future<void> resetAll() async {
     await sentences.reset();
-    await cycles.reset();                 // ✅ reset cycles config to default
+    await cycles.reset();
     await trophies.reset();
     await pin.reset();
     await progress.reset();
     await deck.reset();
-
     await init();
   }
 
-  // ------------------------------------------------------------
-  // CYCLES CONFIG (for GrownUpsScreen)
-  // ------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // VIEW SENTENCE UPDATE FROM CAROUSEL (IMPORTANT!)
+  // ---------------------------------------------------------------------------
+
+  void updateViewSentence(int index) {
+    sentences.setView(index);
+    notifyListeners(); // <–– the critical missing piece
+  }
+
+  // ---------------------------------------------------------------------------
+  // CYCLES CONFIG
+  // ---------------------------------------------------------------------------
 
   Future<void> updateCyclesTarget(int value) async {
     await cycles.setCyclesTarget(value);

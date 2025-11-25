@@ -1,6 +1,7 @@
 // 📄 lib/widgets/grownups/grownups_gate.dart
 //
-// GrownUpsGate — helper to open the Grown Ups area behind a PIN.
+// GrownUpsGate — helper to open the Grown Ups area behind a PIN,
+// now using a slide-up + fade route.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/routes/index.dart';
@@ -24,7 +25,8 @@ class GrownUpsGate {
 
       await pinService.setPin(created);
       if (!context.mounted) return;
-      Navigator.pushNamed(context, AppRoutes.grownups);
+
+      Navigator.of(context).push(createGrownUpsRoute());
     } else {
       // PIN exists → verify
       final verified = await PinEntryFlow.showVerify(
@@ -35,7 +37,8 @@ class GrownUpsGate {
       if (verified == null) return;
 
       if (!context.mounted) return;
-      Navigator.pushNamed(context, AppRoutes.grownups);
+
+      Navigator.of(context).push(createGrownUpsRoute());
     }
   }
 }

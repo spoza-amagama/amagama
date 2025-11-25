@@ -62,7 +62,7 @@ class AppRoutes {
 
       case grownups:
         return RouteHelpers.buildPageRoute(
-          builder: (_) => const GrownupsScreen(),
+          builder: (_) => const GrownUpsScreen(),
           settings: settings,
           transition: RouteTransition.slideUp,
           fullscreenDialog: true,

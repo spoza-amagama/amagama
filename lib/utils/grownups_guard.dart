@@ -4,11 +4,12 @@
 // ------------------------------------------------------------
 // • If PIN exists → verify
 // • Otherwise → create
-// • Uses new PinService API (no lockout / attempts).
+// • Uses PinService + PinEntryFlow
+// • Now navigates with a slide-up + fade transition
 // ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import 'package:amagama/routes/index.dart';
+import 'package:amagama/routes/index.dart'; // must export grownups_route.dart
 import 'package:amagama/services/pin_service.dart';
 import 'package:amagama/widgets/grownups/pin_entry/pin_entry_flow.dart';
 
@@ -16,9 +17,7 @@ class GrownUpsGuard {
   final PinService _pin = PinService();
 
   Future<void> open(BuildContext context) async {
-    // Make sure service has loaded the stored PIN.
     await _pin.init();
-
     final existingPin = _pin.currentPin;
 
     if (existingPin == null) {
@@ -33,7 +32,9 @@ class GrownUpsGuard {
 
       await _pin.setPin(created);
       if (!context.mounted) return;
-      Navigator.pushNamed(context, AppRoutes.grownups);
+
+      // 🔥 Custom animated transition into Grown Ups
+      Navigator.of(context).push(createGrownUpsRoute());
     } else {
       // -------------------------
       // VERIFY PIN
@@ -46,7 +47,9 @@ class GrownUpsGuard {
       if (verified == null) return;
 
       if (!context.mounted) return;
-      Navigator.pushNamed(context, AppRoutes.grownups);
+
+      // 🔥 Custom animated transition into Grown Ups
+      Navigator.of(context).push(createGrownUpsRoute());
     }
   }
 }

@@ -1,5 +1,7 @@
 // 📄 lib/screens/settings_screen.dart
-// ⚙️ Settings Screen — unified with Amagama theme + header patterns.
+//
+// ⚙️ Settings Screen — unified header
+//
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
@@ -11,33 +13,13 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: AmagamaColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // ------------------------------------------------------------
-            // Header (matches Home/Play/Grownups style)
-            // ------------------------------------------------------------
-            ScreenHeader(
-              title: 'Settings',
-              showLogo: false,
-              leadingAction: IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
-                color: AmagamaColors.textPrimary,
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-
-            // ------------------------------------------------------------
-            // Content
-            // ------------------------------------------------------------
-            const Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: SettingsContent(),
-              ),
-            ),
+            AppPageHeader(title: "Settings"),
+            Expanded(child: SettingsContent()),
           ],
         ),
       ),

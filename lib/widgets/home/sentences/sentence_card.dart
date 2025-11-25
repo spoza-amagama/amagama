@@ -1,12 +1,6 @@
-// 📄 lib/widgets/home/sentence_card.dart
+// 📄 lib/widgets/home/sentences/sentence_card.dart
 //
-// 🃏 SentenceCard — week-free, cycle-free sentence card used in the home carousel.
-// State logic:
-// • isLocked     → dimmed + disabled styling + lock watermark
-// • isCompleted  → optional check badge
-// • isActive     → highlighted border
-//
-// No week logic, no cycle UI.
+// 🃏 SentenceCard — clean locked/unlocked behaviour.
 
 import 'package:flutter/material.dart';
 import 'package:amagama/theme/index.dart';
@@ -28,15 +22,12 @@ class SentenceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color baseColor = isLocked
-        ? AmagamaColors.surface.withAlpha(180) // dimmed
+        ? AmagamaColors.surface.withAlpha(180)
         : AmagamaColors.surface;
 
     final Color borderColor = isActive
         ? AmagamaColors.primary
         : AmagamaColors.textSecondary.withAlpha(90);
-
-    final Color shadowColor =
-        AmagamaColors.textPrimary.withAlpha(32); // ~12% shadow
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -52,8 +43,8 @@ class SentenceCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: shadowColor,
-            blurRadius: 10,
+            color: Colors.black.withAlpha(30),
+            blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
@@ -61,11 +52,9 @@ class SentenceCard extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // -------------------------------------------------------
-          // Sentence text (dimmed if locked)
-          // -------------------------------------------------------
+          // Main sentence text
           Opacity(
-            opacity: isLocked ? 0.55 : 1.0,
+            opacity: isLocked ? 0.4 : 1.0,
             child: Text(
               sentenceText,
               style: AmagamaTypography.bodyStyle.copyWith(
@@ -76,21 +65,15 @@ class SentenceCard extends StatelessWidget {
             ),
           ),
 
-          // -------------------------------------------------------
-          // WATERMARK: Large lock icon for locked items
-          // -------------------------------------------------------
+          // SIMPLE LOCK ICON (no blur, no tint)
           if (isLocked)
-            IgnorePointer(
-              child: Icon(
-                Icons.lock_rounded,
-                size: 96,
-                color: Colors.black12,
-              ),
+            const Icon(
+              Icons.lock_rounded,
+              size: 48,
+              color: Color(0x55000000), // soft watermark
             ),
 
-          // -------------------------------------------------------
-          // Completed badge (top-right)
-          // -------------------------------------------------------
+          // Completed checkmark (unlocked only)
           if (isCompleted && !isLocked)
             const Positioned(
               top: 8,

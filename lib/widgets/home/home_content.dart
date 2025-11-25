@@ -64,13 +64,16 @@ class HomeContent extends StatelessWidget {
     // MAIN CONTENT
     // ---------------------------------------------------------------------------
 
-    final int idx = game.sentences.currentSentence;
+    // ✅ use VIEW index so scrolling carousel updates the header
+    final int idx = game.sentences.viewSentence;
     final sentence = game.sentences.byIndex(idx);
 
     final sentenceHeight = SentenceHeight.of(context, sentence.text);
 
-    // Progress for this sentence
-    final prog = game.progress.byIndex(idx);
+    // Progress for this sentence (based on ACTIVE sentence)
+    final activeIndex = game.sentences.currentSentence;
+    final prog = game.progress.byIndex(activeIndex);
+
     final cyclesTarget = game.cycles.cyclesTarget;
     final currentCycles = prog.cyclesCompleted.clamp(0, cyclesTarget);
 
@@ -82,18 +85,22 @@ class HomeContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Trophy summary + per-sentence bar
+          // Trophy summary + per-sentence progress bar
           HomeHeader(game: game),
 
           const SizedBox(height: AmagamaSpacing.lg),
 
-          // Sentence header: “Sentence 1 of 20” (centered)
+          // -------------------------------------------------------------------
+          // Sentence header: “Sentence X of Y” (centered)
+          // -------------------------------------------------------------------
           HomeSentenceHeader(
-            sentenceNumber: idx + 1,
+            sentenceNumber: idx + 1, // <= dynamic view index
             totalSentences: game.sentences.total,
           ),
 
-          // Cycle header: “Cycle X of Y”
+          // -------------------------------------------------------------------
+          // Cycle header: “Cycle X of Y” (always shows CURRENT gameplay progress)
+          // -------------------------------------------------------------------
           if (cyclesTarget > 0) ...[
             const SizedBox(height: 4),
             Text(
@@ -108,7 +115,9 @@ class HomeContent extends StatelessWidget {
           ] else
             const SizedBox(height: AmagamaSpacing.md),
 
+          // -------------------------------------------------------------------
           // Sentence preview (carousel handles view-only interaction)
+          // -------------------------------------------------------------------
           SizedBox(
             height: sentenceHeight,
             child: const HomeSentenceCarousel(),

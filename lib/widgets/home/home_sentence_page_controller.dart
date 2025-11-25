@@ -1,20 +1,22 @@
 // 📄 lib/widgets/home/home_sentence_page_controller.dart
 // ------------------------------------------------------------
-// HomeSentencePageController — manages PageController lifecycle.
-//
-// Provides a ready-to-use controller configured with viewportFraction
-// and initial page. Keeps Stateful logic OUT of the carousel UI.
+// HomeSentencePageController — supports infinite-loop carousels.
+// ------------------------------------------------------------
+// 🟢 FIXED:
+// • no longer overrides initialPage
+// • allows parent widget (carousel) to supply its own controller
+// • maintains lifecycle without interfering with infinite scroll
 // ------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:amagama/state/game_controller.dart';
 
 class HomeSentencePageController extends StatefulWidget {
+  final PageController Function() createController;
   final Widget Function(PageController controller) builder;
 
   const HomeSentencePageController({
     super.key,
+    required this.createController,
     required this.builder,
   });
 
@@ -25,28 +27,22 @@ class HomeSentencePageController extends StatefulWidget {
 
 class _HomeSentencePageControllerState
     extends State<HomeSentencePageController> {
-  PageController? _controller;
+  late final PageController _controller;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final game = context.read<GameController>();
-    final initial = game.sentences.viewSentence;
-
-    _controller ??= PageController(
-      viewportFraction: 0.78,
-      initialPage: initial,
-    );
+  void initState() {
+    super.initState();
+    _controller = widget.createController();   // parent sets initialPage
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder(_controller!);
+    return widget.builder(_controller);
   }
 }
